@@ -66,20 +66,21 @@ setValidity("SPData", function(object) {
 
 #' Subset an SPData set
 #'
-#' Select SPData[i,j] for cells i and proteins j
+#' Select SPData[i,j] for cells i and proteins j. Note this does not remove the cells
+#' designated as nearest neighbours.
 #' @export
 setMethod("[", "SPData", function(x, i, j, drop="missing") {
     .n.proteins <- length(j)
     .protein.names <- pNames(x)[j]
     .Y <- NULL
 
-    if(length(i) > 1 && length(j) > 1) .Y <- cells(x)[i,j]
-
-    else .Y <- as.matrix(cells(x)[,i])
+    .Y <- as.matrix(cells(x)[i,j])
 
     .X <- lapply(NN(x), function(nn.cells) {
-        if(is.matrix(nn.cells)) nn.cells[,i] else as.matrix(nn.cells[i])
+        if(is.matrix(nn.cells)) nn.cells[,j] else as.matrix(nn.cells[j])
     })
+
+    .X <- .X[i]
 
     SPData(protein.names = .protein.names,
                Y = .Y,
