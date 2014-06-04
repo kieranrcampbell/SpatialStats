@@ -64,13 +64,18 @@ setValidity("SPData", function(object) {
 
 })
 
+#' Subset an SPData set
+#'
+#' Select SPData[i,j] for cells i and proteins j
 #' @export
-setMethod("[", "SPData", function(x,i,drop="missing") {
-    .n.proteins <- length(i)
-    .protein.names <- pNames(x)[i]
+setMethod("[", "SPData", function(x, i, j, drop="missing") {
+    .n.proteins <- length(j)
+    .protein.names <- pNames(x)[j]
     .Y <- NULL
 
-    if(length(i) > 1) .Y <- cells(x)[,i] else .Y <- as.matrix(cells(x)[,i])
+    if(length(i) > 1 && length(j) > 1) .Y <- cells(x)[i,j]
+
+    else .Y <- as.matrix(cells(x)[,i])
 
     .X <- lapply(NN(x), function(nn.cells) {
         if(is.matrix(nn.cells)) nn.cells[,i] else as.matrix(nn.cells[i])

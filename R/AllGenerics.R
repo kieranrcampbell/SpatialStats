@@ -9,3 +9,5 @@ setGeneric("nProt", function(object) standardGeneric("nProt"))
 setGeneric("pNames", function(object) standardGeneric("pNames"))
 
 setGeneric("NN", function(object) standardGeneric("NN"))
+
+setGeneric("nnReg", function(object) standardGeneric("nnReg"))
