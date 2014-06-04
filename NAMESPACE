@@ -1,4 +1,5 @@
 export(loadCells)
+exportClasses(SPData)
 exportMethods("[")
 exportMethods(NN)
 exportMethods(cells)

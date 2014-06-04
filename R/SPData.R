@@ -1,12 +1,13 @@
 ## spatialpro R class
 ## kieranrcampbell@gmail.com
 
+#' Class containing spatial proteomics data
+#'
+#' @export
 SPData <- setClass("SPData",
-                       slots = c(n.cells = "integer",
-                           n.proteins = "integer",
-                           protein.names = "character",
-                           Y = "matrix",
-                           X = "list"))
+                   slots = c(protein.names = "character",
+                       Y = "matrix",
+                       X = "list"))
 
 #' Extracts the cell proteomics data
 #' @export

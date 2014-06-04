@@ -1,6 +1,6 @@
 \name{loadCells}
 \alias{loadCells}
-\title{Loads an Xell matlab file into the SpatialPRo formal}
+\title{Loads an Xell matlab file into the SPData format}
 \usage{
 loadCells(filename, control.isotopes = c("Xe131", "Cs133", "Ir193"),
   log.data = TRUE)
