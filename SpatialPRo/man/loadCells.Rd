@@ -1,0 +1,21 @@
+\name{loadCells}
+\alias{loadCells}
+\title{Loads an Xell matlab file into the SpatialPRo formal}
+\usage{
+loadCells(filename, control.isotopes = c("Xe131", "Cs133", "Ir193"),
+  log.data = TRUE)
+}
+\arguments{
+  \item{filename}{The matlab file}
+
+  \item{control.isotopes}{The isotopes used for control to
+  exclude from analysis}
+
+  \item{log.data}{Boolean of whether to log the data}
+}
+\description{
+This function parses the matlab files, pulling out relevant
+proteins in the 'D' channel and validates that the correct
+proteins are present.
+}
+

@@ -1,0 +1,8 @@
+export(loadCells)
+exportMethods("[")
+exportMethods(NN)
+exportMethods(cells)
+exportMethods(nCells)
+exportMethods(nProt)
+exportMethods(pNames)
+exportMethods(show)
