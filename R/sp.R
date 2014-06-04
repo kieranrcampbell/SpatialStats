@@ -14,11 +14,11 @@ setMethod("cells", "SpatialPRo", function(object) object@Y )
 
 #' Returns the number of cells in the sample
 #' @export
-setMethod("nCells", "SpatialPRo", function(object) object@n.cells )
+setMethod("nCells", "SpatialPRo", function(object) dim(object@Y)[1] )
 
 #' Returns the number of proteins measured (number of channels)
 #' @export
-setMethod("nProt", "SpatialPRo", function(object) object@n.proteins )
+setMethod("nProt", "SpatialPRo", function(object) dim(object@Y)[2] )
 
 #' Returns the names of the proteins measured
 #' @export
@@ -34,7 +34,7 @@ setMethod("NN", "SpatialPRo", function(object) object@X )
 #' @export
 setMethod("show", "SpatialPRo", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
-    cat(" ", nCells(object), " cells with ", nProt(object), " proteins\n", sep="")
+    cat(" ", nCells(object), " cells with ", nProt(object), " protein(s)\n", sep="")
     invisible(NULL)
 
 })
@@ -44,6 +44,7 @@ setValidity("SpatialPRo", function(object) {
     msg <- NULL
     valid <- TRUE
     if(nCells(object) != length(NN(object))) {
+        print(nCells(object))
         valid <- FALSE
         msg <- c(msg, "Nearest neighbour data not available for all cells")
     }
@@ -66,14 +67,16 @@ setValidity("SpatialPRo", function(object) {
 setMethod("[", "SpatialPRo", function(x,i,drop="missing") {
     .n.proteins <- length(i)
     .protein.names <- pNames(x)[i]
-    .Y <- cells(x)[,i]
+    .Y <- NULL
+
+    if(length(i) > 1) .Y <- cells(x)[,i] else .Y <- as.matrix(cells(x)[,i])
+
     .X <- lapply(NN(x), function(nn.cells) {
-        if(is.matrix(nn.cells)) nn.cells[,i] else nn.cells[i]
+        if(is.matrix(nn.cells)) nn.cells[,i] else as.matrix(nn.cells[i])
     })
 
-    SpatialPRo(n.cells = nCells(x),
-               n.proteins = .n.proteins,
-               protein.names = .protein.names,
+    SpatialPRo(protein.names = .protein.names,
                Y = .Y,
                X = .X)
 })
+

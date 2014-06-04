@@ -1,5 +1,5 @@
 
-#' Loads an Xell matlab file into the SpatialPRo formal
+#' Loads an Xell matlab file into the SpatialPRo format
 #'
 #' This function parses the matlab files, pulling out relevant proteins
 #' in the 'D' channel and validates that the correct proteins are present.
@@ -63,7 +63,7 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
 
     if(log.data) X <- lapply(X, log)
 
-    sp <- SpatialPRo(n.cells=n.cells, n.proteins=n.proteins,protein.names=protein.names,
+    sp <- SpatialPRo(protein.names=protein.names,
                      Y=Y, X=X)
     return( sp )
 }
