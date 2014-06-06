@@ -1,7 +1,7 @@
 ## regression models for nearest neighbour data
 ## kieranrcampbell@gmail.com
 
-#' Nearest neighbour regression
+#' Basic nearest neighbour regression
 #' @export
 setMethod("nnReg", "SPData", function(object) {
     Y <- cells(object)

@@ -69,7 +69,10 @@ setValidity("SPData", function(object) {
 #' Select SPData[i,j] for cells i and proteins j. Note this does not remove the cells
 #' designated as nearest neighbours.
 #' @export
-setMethod("[", "SPData", function(x, i, j, drop="missing") {
+setMethod("[", "SPData", function(x, i, j="missing") {
+    if(missing(j)) j <- 1:nProt(x)
+    if(missing(i)) i <- 1:nCells(x)
+
     .n.proteins <- length(j)
     .protein.names <- pNames(x)[j]
     .Y <- NULL

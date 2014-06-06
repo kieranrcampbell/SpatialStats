@@ -42,6 +42,7 @@
   further details.  }
 }
 \description{
-Select SPData[i,j] for cells i and proteins j
+Select SPData[i,j] for cells i and proteins j. Note this
+does not remove the cells designated as nearest neighbours.
 }
 
