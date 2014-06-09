@@ -3,7 +3,7 @@
 \alias{[,SPData-method}
 \title{Subset an SPData set}
 \usage{
-\S4method{[}{SPData}(x, i, j, drop = "missing")
+\S4method{[}{SPData}(x, i, j = "missing")
 }
 \arguments{
   \item{x}{ object from which to extract element(s) or in
@@ -34,12 +34,6 @@
 
   An index value of \code{NULL} is treated as if it were
   \code{integer(0)}.  }
-
-  \item{drop}{For matrices and arrays.  If \code{TRUE} the
-  result is coerced to the lowest possible dimension (see
-  the examples).  This only works for extracting elements,
-  not for the replacement.  See \code{\link{drop}} for
-  further details.  }
 }
 \description{
 Select SPData[i,j] for cells i and proteins j. Note this
