@@ -7,7 +7,8 @@
 SPData <- setClass("SPData",
                    slots = c(protein.names = "character",
                        Y = "matrix",
-                       X = "list"))
+                       X = "list",
+                       size = "numeric"))
 
 #' Extracts the cell proteomics data
 #' @export
@@ -31,6 +32,20 @@ setMethod("pNames", "SPData", function(object) object@protein.names )
 #' each of which have m channels
 #' @export
 setMethod("NN", "SPData", function(object) object@X )
+
+#' Returns the cell sizes
+#'
+#' The ith entry is the size of the ith cell, as ordered by cells(X)
+#' @export
+setMethod("size", "SPData", function(object) object@size)
+
+#' Gives dimension of underlying matrix representation
+#'
+#' Returns number of cells and number of proteins as dimension of
+#' underlying matrix
+#' @export
+setMethod("dim", "SPData", function(x) c(nCells(x), nProt(x)))
+
 
 #' @export
 setMethod("show", "SPData", function(object) {
@@ -85,9 +100,12 @@ setMethod("[", "SPData", function(x, i, j="missing") {
 
     .X <- .X[i]
 
+    .size <- size(x)[i]
+
     SPData(protein.names = .protein.names,
-               Y = .Y,
-               X = .X)
+           Y = .Y,
+           X = .X,
+           size = .size)
 })
 
 
@@ -157,6 +175,6 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
     if(log.data) X <- lapply(X, log)
 
     sp <- SPData(protein.names=protein.names,
-                     Y=Y, X=X)
+                     Y=Y, X=X, size=as.numeric(m$Xell.size))
     return( sp )
 }

@@ -11,3 +11,5 @@ setGeneric("pNames", function(object) standardGeneric("pNames"))
 setGeneric("NN", function(object) standardGeneric("NN"))
 
 setGeneric("nnReg", function(object) standardGeneric("nnReg"))
+
+setGeneric("size", function(object) standardGeneric("size"))
