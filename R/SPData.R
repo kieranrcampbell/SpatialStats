@@ -5,7 +5,7 @@
 #'
 #' @export
 SPData <- setClass("SPData",
-                   slots = c(protein.names = "character",
+                   representation = list(protein.names = "character",
                        Y = "matrix",
                        X = "list",
                        size = "numeric"))
@@ -95,7 +95,7 @@ setMethod("[", "SPData", function(x, i, j="missing") {
     .Y <- as.matrix(cells(x)[i,j])
 
     .X <- lapply(NN(x), function(nn.cells) {
-        if(is.matrix(nn.cells)) nn.cells[,j] else as.matrix(nn.cells[j])
+        if(is.matrix(nn.cells)) nn.cells[,j] else t(as.matrix(nn.cells[j]))
     })
 
     .X <- .X[i]
@@ -177,4 +177,18 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
     sp <- SPData(protein.names=protein.names,
                      Y=Y, X=X, size=as.numeric(m$Xell.size))
     return( sp )
+}
+
+
+#' Ridge regression
+#' @export
+ridgeReg <- function(sp) {
+    Y <- cells(sp)
+
+    X <- t(sapply(NN(sp), function(x) {
+        if(!is.matrix(x)) x
+        else colMeans(x)
+    }))
+
+
 }
