@@ -14,6 +14,9 @@ setGeneric("nnReg", function(object) standardGeneric("nnReg"))
 
 setGeneric("size", function(object) standardGeneric("size"))
 
+setGeneric("NN<-", function(object, value) standardGeneric("NN<-"))
+
+setGeneric("cells<-", function(object, value) standardGeneric("cells<-"))
 
 ## For SPExp
 
@@ -21,6 +24,6 @@ setGeneric("getDir", function(object) standardGeneric("getDir"))
 
 setGeneric("files", function(object) standardGeneric("files"))
 
-setGeneric("load", function(object) standardGeneric("load"))
+setGeneric("loadExp", function(object) standardGeneric("loadExp"))
 
 setGeneric("data", function(object) standardGeneric("data"))

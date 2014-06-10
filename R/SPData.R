@@ -79,6 +79,29 @@ setValidity("SPData", function(object) {
 
 })
 
+#' Sets the nearest neighbour data
+#'
+#' @name NN<-
+#' @export
+setReplaceMethod("NN", signature = "SPData",
+                 function(object, value) {
+                     object@X <- value
+                     validObject(object)
+                     return(object)
+                 })
+
+#' Sets the cell by cell measurements
+#'
+#' @name cells<-
+#' @export
+setReplaceMethod("cells", signature = "SPData",
+                 function(object, value) {
+                     object@Y <- value
+                     validObject(object)
+                     return(object)
+                 })
+
+
 #' Subset an SPData set
 #'
 #' Select SPData[i,j] for cells i and proteins j. Note this does not remove the cells
@@ -120,7 +143,7 @@ setMethod("[", "SPData", function(x, i, j="missing") {
 #' @param log.data Boolean of whether to log the data
 #' @export
 loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
-                        log.data=TRUE) {
+                        rescale.data=FALSE, scale.factor=10000) {
     library(R.matlab)
 
 
@@ -158,7 +181,6 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
     Y <- m$Xell.list
     Y <- Y[,yp.id]
 
-    if(log.data) Y <- log(Y)
 
     get.nn.count <- function(x,p.id) {
         ## returns the nearest neighbour count for proteins
@@ -172,13 +194,34 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
 
     X <- lapply(nn.count, get.nn.count, xp.id)
 
-    if(log.data) X <- lapply(X, log)
 
     sp <- SPData(protein.names=protein.names,
                      Y=Y, X=X, size=as.numeric(m$Xell.size))
+    sp <- preprocess(sp, rescale.data, scale.factor)
     return( sp )
 }
 
+preprocess <- function(sp, scale.data=TRUE, scale.factor=10000) {
+    Y <- cells(sp)
+    X <- NN(sp)
+
+    ## remove negative 'counts'
+    Y[Y<0] <- 0
+
+    X <- lapply(X, function(x) {
+        x[x<0] <- 0
+        x
+    })
+
+    if(scale.data) {
+        Y <- Y / scale.factor
+        X <- lapply(X, function(x) x / scale.factor )
+    }
+
+    cells(sp) <- Y ; NN(sp) <- X
+
+    return( sp )
+}
 
 #' Ridge regression
 #' @export
@@ -189,6 +232,4 @@ ridgeReg <- function(sp) {
         if(!is.matrix(x)) x
         else colMeans(x)
     }))
-
-
 }

@@ -36,7 +36,7 @@ setMethod("initialize", "SPExp",
 #' Loads in the experiment data
 #'
 #' @export
-setMethod("load", "SPExp",
+setMethod("loadExp", "SPExp",
           function(object) {
               object@spdata <- list()
               N <- length(files(object))
@@ -57,6 +57,12 @@ setMethod("[", "SPExp",
               x@spdata <- x@spdata[i]
               return(x)
           })
+#' @export
+setMethod("[[", "SPExp",
+          function(x,i) {
+              return( x@spdata[[i]])
+          })
+
 
 #' @export
 setMethod("data", "SPExp",
