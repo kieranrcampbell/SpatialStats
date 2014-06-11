@@ -3,7 +3,8 @@
 SPExp <- setClass("SPExp",
                   representation = list(dir = "character",
                       files = "character",
-                      spdata = "list"))
+                      spdata = "list",
+                      ids = "numeric"))
 
 
 #' @export
@@ -30,8 +31,18 @@ setMethod("initialize", "SPExp",
               .Object@dir <- edir
               .Object@files <- dir(edir)
               .Object@spdata <- list()
+
+              s <- strsplit(files(.Object),"_ID")
+              .Object@ids <- as.numeric(sapply(s, function(x) strsplit(x[2],"_")[[1]][1]))
+
               return(.Object)
           })
+
+#' Returns the sample ids.
+#'
+#' @export
+setMethod("ids", "SPExp",
+          function(object) object@ids)
 
 #' Loads in the experiment data
 #'

@@ -27,3 +27,5 @@ setGeneric("files", function(object) standardGeneric("files"))
 setGeneric("loadExp", function(object) standardGeneric("loadExp"))
 
 setGeneric("data", function(object) standardGeneric("data"))
+
+setGeneric("ids", function(object) standardGeneric("ids"))

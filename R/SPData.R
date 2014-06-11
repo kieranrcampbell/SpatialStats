@@ -208,10 +208,10 @@ preprocess <- function(sp, scale.data=FALSE, scale.factor=10000) {
     mu.bg <- -min(Y)
 
     print("Adding -background")
-    Y <- Y + mu.bg + 1
+    Y <- log(Y + mu.bg + 1)
 
     X <- lapply(X, function(x) {
-        log(x + mu.bg + 1)
+        x + mu.bg + 1
     })
 
     if(scale.data) {
