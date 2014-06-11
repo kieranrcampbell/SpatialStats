@@ -25,7 +25,7 @@ setMethod("nnReg", "SPData", function(object) {
 #' @param alpha The significance level for the tests.
 #'
 #' @export
-getAdj <- function(spdata, fit, alpha=0.01) {
+getAdj <- function(spdata, fit, alpha=0.05) {
     ## returns an adjacency matrix from a general linear model fit
     s <- summary(fit)
 

@@ -201,19 +201,21 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
     return( sp )
 }
 
-preprocess <- function(sp, scale.data=TRUE, scale.factor=10000) {
+preprocess <- function(sp, scale.data=FALSE, scale.factor=10000) {
     Y <- cells(sp)
     X <- NN(sp)
 
-    ## remove negative 'counts'
-    Y[Y<0] <- 0
+    mu.bg <- -min(Y)
+
+    print("Adding -background")
+    Y <- Y + mu.bg + 1
 
     X <- lapply(X, function(x) {
-        x[x<0] <- 0
-        x
+        log(x + mu.bg + 1)
     })
 
     if(scale.data) {
+        print("Rescaling data...")
         Y <- Y / scale.factor
         X <- lapply(X, function(x) x / scale.factor )
     }
