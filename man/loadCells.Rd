@@ -2,8 +2,8 @@
 \alias{loadCells}
 \title{Loads an Xell matlab file into the SPData format}
 \usage{
-loadCells(filename, control.isotopes = c("Xe131", "Cs133", "Ir193"),
-  rescale.data = FALSE, scale.factor = 10000)
+loadCells(filename, id = -1, control.isotopes = c("Xe131", "Cs133",
+  "Ir193"), rescale.data = FALSE, scale.factor = 10000)
 }
 \arguments{
   \item{filename}{The matlab file}

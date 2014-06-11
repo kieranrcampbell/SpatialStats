@@ -18,6 +18,10 @@ setGeneric("NN<-", function(object, value) standardGeneric("NN<-"))
 
 setGeneric("cells<-", function(object, value) standardGeneric("cells<-"))
 
+setGeneric("id", function(object, value) standardGeneric("id"))
+
+setGeneric("id<-", function(object, value) standardGeneric("id<-"))
+
 ## For SPExp
 
 setGeneric("getDir", function(object) standardGeneric("getDir"))

@@ -55,7 +55,7 @@ setMethod("loadExp", "SPExp",
               for(i in 1:N) {
                   object@spdata[[ i ]] <- loadCells(paste(getDir(object),
                                                           files(object)[i],
-                                                          sep=""))
+                                                          sep=""), id=ids(object)[i])
               }
 
               return(object)

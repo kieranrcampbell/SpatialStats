@@ -8,7 +8,8 @@ SPData <- setClass("SPData",
                    representation = list(protein.names = "character",
                        Y = "matrix",
                        X = "list",
-                       size = "numeric"))
+                       size = "numeric",
+                       id = "numeric"))
 
 #' Extracts the cell proteomics data
 #' @export
@@ -45,6 +46,23 @@ setMethod("size", "SPData", function(object) object@size)
 #' underlying matrix
 #' @export
 setMethod("dim", "SPData", function(x) c(nCells(x), nProt(x)))
+
+#' Returns the sample id
+#'
+#' @export
+setMethod("id", "SPData", function(object) object@id)
+
+#' Sets the sample id
+#'
+#' @name id<-
+#' @export
+setReplaceMethod("id", signature = "SPData",
+                 function(object, value) {
+                     object@id <- value
+                     return(object)
+                 })
+
+
 
 
 #' @export
@@ -142,7 +160,7 @@ setMethod("[", "SPData", function(x, i, j="missing") {
 #' @param control.isotopes The isotopes used for control to exclude from analysis
 #' @param log.data Boolean of whether to log the data
 #' @export
-loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
+loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir193"),
                         rescale.data=FALSE, scale.factor=10000) {
     library(R.matlab)
 
@@ -196,7 +214,7 @@ loadCells <- function(filename, control.isotopes = c("Xe131","Cs133","Ir193"),
 
 
     sp <- SPData(protein.names=protein.names,
-                     Y=Y, X=X, size=as.numeric(m$Xell.size))
+                     Y=Y, X=X, size=as.numeric(m$Xell.size),id=id)
     sp <- preprocess(sp, rescale.data, scale.factor)
     return( sp )
 }
