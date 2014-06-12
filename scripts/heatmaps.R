@@ -122,13 +122,13 @@ heatmap.2(samp.cor, trace="none", col=rev(cols), symm=TRUE, margins=c(10,10),
           main="Correlation between samples \n across mean protein expression")
 heatmap.2(prot.cor, trace="none", col=rev(cols), symm=TRUE, margins=c(10,10),
           main="Correlation between mean protein \n expression across samples")
-heatmap.2(all.means, trace="none", margins=c(10,10), col=rev(cols), scale=c("col"),
+heatmap.2(all.means, trace="none", margins=c(10,10), col=rev(cols), scale="none",
           main="Pathway activation \n all samples",ylab="Nearest neighbour protein",
           xlab="Cell protein")
-heatmap.2(control.means, trace="none", margins=c(10,10), scale="col", col=rev(cols),
+heatmap.2(control.means, trace="none", margins=c(10,10), scale="none", col=rev(cols),
           main="Pathway activation \n healthy tissue", ylab="Nearest neighbour protein",
           xlab="Cell protein")
-heatmap.2(tumor.means, trace="none", margins=c(10,10), scale="col", col=rev(cols),
+heatmap.2(tumor.means, trace="none", margins=c(10,10), scale="none", col=rev(cols),
           main="Pathway activation \n tumour only", ylab="Nearest neighbour protein",
           xlab="Cell protein")
 dev.off()
