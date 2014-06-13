@@ -13,7 +13,7 @@ protein.names <- pNames(spe[[1]])
 if(n.exp != 21) stop("Need 21 experiments for plotting")
 
 pdf("../img/drange.pdf", height=8, width=12)
-par(mfrow=c(3,7), mar=c(1.3,1.3,1.3,1.3))
+par(mfrow=c(3,7), mar=c(1.8,1.8,1.8,1.8))
 
 for(sp in data(spe)) {
     Y <- as.vector(cells(sp))

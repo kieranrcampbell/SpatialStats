@@ -3,7 +3,7 @@
 \alias{[,SPData-method}
 \title{Subset an SPData set}
 \usage{
-\S4method{[}{SPData}(x, i, j = "missing")
+\S4method{[}{SPData}(x, i, j)
 }
 \arguments{
   \item{x}{ object from which to extract element(s) or in

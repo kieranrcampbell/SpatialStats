@@ -66,6 +66,7 @@ setMethod("[", "SPExp",
           function(x, i) {
               x@files <- files(x)[i]
               x@spdata <- x@spdata[i]
+              x@ids <- x@ids[i]
               return(x)
           })
 #' @export

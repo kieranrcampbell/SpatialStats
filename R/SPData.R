@@ -125,7 +125,7 @@ setReplaceMethod("cells", signature = "SPData",
 #' Select SPData[i,j] for cells i and proteins j. Note this does not remove the cells
 #' designated as nearest neighbours.
 #' @export
-setMethod("[", "SPData", function(x, i, j="missing") {
+setMethod("[", "SPData", function(x, i, j) {
     if(missing(j)) j <- 1:nProt(x)
     if(missing(i)) i <- 1:nCells(x)
 

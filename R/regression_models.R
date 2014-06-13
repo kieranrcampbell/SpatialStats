@@ -45,6 +45,44 @@ getAdj <- function(spdata, fit, alpha=0.05) {
     return ( A )
 }
 
+
+#' Get p-value matrix from fit
+#'
+#' This function constructs a nProt by nProt directed
+#' matrix of p values
+#'
+#' @param spdata The SPdata object the fit was made from
+#' @param fit The fit returned by calling nnReg
+#' @param setZero Sets all entries to zero that don't pass the threshold
+#' @param alpha The significance level for the tests.
+#'
+#' @export
+getPMat <- function(spdata, fit, setOne=FALSE, alpha=0.05) {
+    ## returns an adjacency matrix from a general linear model fit
+    s <- summary(fit)
+
+    n.proteins <- nProt(spdata)
+
+    A <- matrix(0,nrow=n.proteins,ncol=n.proteins)
+
+    for(i in 1:n.proteins) {
+        ## looking at which proteins influence i
+        coeff <- s[[i]]$coefficients
+        p.vals <- as.numeric(coeff[,4])
+        p.vals <- p.vals[-1] ## remove intercept consideration
+        pcol <- p.vals
+        if(setOne) {
+            p.vals <- p.vals < alpha
+            pcol[!p.vals] <- 1
+        }
+        A[,i] <- pcol
+    }
+
+    rownames(A) <- colnames(A)  <- pNames(spdata)
+    return ( A )
+}
+
+
 reweightReg <- function(spdata, A) {
     fits <- list()
     length(fits) <- nProt(spdata)
