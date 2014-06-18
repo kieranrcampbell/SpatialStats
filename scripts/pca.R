@@ -66,7 +66,7 @@ mean2 <- colMeans(cells(sp2))
 
 names(mean1) <- names(mean2) <- protein.names
 
-k.index <- grep("Keratin", protein.names)
+k.index <- grep("Cadherin", protein.names)
 
 library(ggplot2)
 
@@ -78,12 +78,36 @@ k2$nm <- 'k2'
 
 kdist <- rbind(k1, k2)
 
-ggplot(kdist, aes(count, fill = nm)) + geom_density(alpha = 0.2)
+plt <- ggplot(kdist, aes(count, fill = nm)) + geom_density(alpha = 0.2)
+
+ggsave("../img/ecadherin.png", plot=plt)
 
 md <- mean1 - mean2
 mrk <- md[abs(md) > log(2)]
 
+stop("done")
+
+png("../img/fold_change.png")
 par(mar=c(10,5,10,5))
 barplot(mrk, las=2)
+dev.off()
+
 #text(cex=1, y=-1.25, names(mrk), xpd=TRUE, srt=45)
+
+X <- NN(sp)
+Y <- cells(sp)
+nn.ids <- list()
+
+for(i in 1:nCells(sp)) {
+    nn <- X[[i]]
+    id <- apply(nn, 1, function(readout) {
+        print(length(readout))
+        logi <- apply(Y, 1, function(y) {
+            return(all.equal(y, readout) == TRUE)
+        })
+        which(logi)
+    })
+
+
+}
 
