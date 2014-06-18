@@ -8,8 +8,10 @@ SPData <- setClass("SPData",
                    representation = list(protein.names = "character",
                        Y = "matrix",
                        X = "list",
+                       nn.ids = "list",
                        size = "numeric",
-                       id = "numeric"))
+                       id = "numeric",
+                       pos = "numeric"))
 
 #' Extracts the cell proteomics data
 #' @export
@@ -61,6 +63,11 @@ setReplaceMethod("id", signature = "SPData",
                      object@id <- value
                      return(object)
                  })
+
+#' Returns the nearest neighbour ids
+#'
+#' @export
+setMethod("nnID", "SPData", function(object) object@nn.ids)
 
 
 
@@ -212,9 +219,17 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
 
     X <- lapply(nn.count, get.nn.count, xp.id)
 
+    nnids <- lapply(m$Xell.nearest, function(xl) {
+        if(is.matrix(xl)) {
+            return ( xl[,1] )
+        } else {
+            xl[1]
+        }
+    })
 
     sp <- SPData(protein.names=protein.names,
-                     Y=Y, X=X, size=as.numeric(m$Xell.size),id=id)
+                     Y=Y, X=X, size=as.numeric(m$Xell.size),id=id,
+                 nn.ids=nnids)
     sp <- preprocess(sp, rescale.data, scale.factor)
     return( sp )
 }
