@@ -22,6 +22,8 @@ setGeneric("id", function(object) standardGeneric("id"))
 
 setGeneric("id<-", function(object, value) standardGeneric("id<-"))
 
+setGeneric("nnID", function(object) standardGeneric("nnID"))
+
 ## For SPExp
 
 setGeneric("getDir", function(object) standardGeneric("getDir"))
