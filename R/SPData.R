@@ -11,7 +11,8 @@ SPData <- setClass("SPData",
                        nn.ids = "list",
                        size = "numeric",
                        id = "numeric",
-                       pos = "numeric"))
+                       pos = "numeric",
+                       nn.counts = "list"))
 
 #' Extracts the cell proteomics data
 #' @export

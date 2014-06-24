@@ -87,7 +87,7 @@ mrk <- md[abs(md) > log(2)]
 
 stop("done")
 
-png("../img/fold_change.png")
+png("../img//fold_change.png")
 par(mar=c(10,5,10,5))
 barplot(mrk, las=2)
 dev.off()
