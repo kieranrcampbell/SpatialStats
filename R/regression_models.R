@@ -141,9 +141,10 @@ weightedSubsetBoundaryRegression <- function(sp, cellClasses, responseClass, bou
     cellBoundary <- list()
     cellBoundary[[1]] <- intersect(cl1, boundary)
     cellBoundary[[2]] <- intersect(cl2, boundary)
+    print(length(cellBoundary[[1]]))
+    print(length(cellBoundary[[2]]))
 
     X <- weightNN(NN(sp), weights)
-
     ## list involving only nn of class 1
     X.class1 <- separateNN(X, nnID(sp), cl1)
 
@@ -155,18 +156,29 @@ weightedSubsetBoundaryRegression <- function(sp, cellClasses, responseClass, bou
     X1 <- sumNN(X.class1, nProtein)
     X2 <- sumNN(X.class2, nProtein)
 
+    #X1 <- t(X1) ; X2 <- t(X2)
     ## select out response variables of interest
     Y <- cells(sp)
-    Y <- Y[,responseSubset]
+
+    ## ## convert to standard normal
+    ## Y <- Y - rowMeans(Y)
+    ## sds <- apply(Y, 1, sd)
+    ## Y <- Y / sds
+
+    Y <- as.matrix(Y[,responseSubset])
 
     ## select out only cells along the boundary
     Y <- Y[cellBoundary[[ responseClass ]], ]
     X1 <- X1[cellBoundary[[ responseClass ]], dependentSubset]
     X2 <- X2[cellBoundary[[ responseClass ]], dependentSubset]
 
-    fit <- lm(Y ~ X1 + X2)
+    X <- NULL
+    if(responseClass == 1) X <- X2
+    if(responseClass == 2) X <- X1
 
-    return(fit)
+    fit <- lm(Y ~ log(X))
+
+    return(list(fit=fit,Y=Y,X=X))
 }
 
 #' Separates out the nearest neighbours into only those
@@ -210,7 +222,8 @@ sumNN <- function(X, nprotein) {
         if(!is.matrix(x)) {
             if(length(x) == 0) rep(0,nprotein) else x
         } else {
-            colSums(x)
+            cs <- colSums(x)
+            cs
         }
     }))
 }

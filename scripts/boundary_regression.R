@@ -2,12 +2,15 @@ library(EMCluster)
 library(devtools)
 library(rgl)
 library(R.matlab)
+library(gplots)
 
 load_all("..")
 
 load("~/ebi/data/spe.RData")
 
-sp <- spe[[5]]
+spid <- 5
+
+sp <- spe[[spid]]
 
 Y <- cells(sp)
 
@@ -66,11 +69,14 @@ responseSubset <- getProteinIds(protein.names,
                                   "Slug", "NFkB",
                                   "EGFR"))
 
+#responseSubset <- getProteinIds(protein.names,c("Slug"))
 
 dependentRemoveSubset <- getProteinIds(protein.names,
                                        c("Keratin",
                                          "ER", "PR",
-                                         "Ki67","CD"))
+                                         "Ki67","pSHP",
+                                         "Caspase", "Panactin",
+                                         "Her2", "CAH9", "CK7","H3"))
 
 dependentRemoveSubset <- unlist(dependentRemoveSubset)
 
@@ -80,14 +86,38 @@ pset <- setdiff(pset, dependentRemoveSubset)
 
 cell.class <- ret$class
 
-weights <- readMat("../matlab/boundary_sizes.mat")
+weight.name <- paste("../data/boundary_sizes",spid,".mat",sep="")
+
+weights <- readMat(weight.name)
 weights <- weights[[1]]
 weights <- lapply(weights, as.vector)
 
-fit <- weightedSubsetBoundaryRegression(sp, cell.class, 2, boundary,
+regList <- weightedSubsetBoundaryRegression(sp, cell.class, tumourID, boundary,
                                         weights, responseSubset, pset)
 
-print("Reponse variables")
-print(protein.names[responseSubset])
-print("Dependent variables")
-print(protein.names[pset])
+fit <- regList$fit
+
+s <- summary(fit)
+
+TTmat <- matrix(0, ncol=length(responseSubset),nrow=length(pset))
+STmat <- matrix(0, ncol=length(responseSubset),nrow=length(pset))
+
+colnames(TTmat) <- colnames(STmat) <- protein.names[responseSubset]
+rownames(TTmat) <- rownames(STmat) <- protein.names[pset]
+
+for(i in 1:length(s)) {
+    coef <- s[[i]]$coefficients
+    sig <- as.numeric(coef[-1,4] < 0.05)
+    mid <- length(sig)/2
+    STmat[,i] <- sig#[1:mid]
+    #TTmat[,i] <- sig[-(1:mid)]
+}
+
+pdfname <- paste("../img/boundary_hmap_sample",spid,".pdf",sep="")
+
+pdf(pdfname,width=6, height=6)
+#heatmap.2(TTmat,dendrogram="none",Rowv=FALSE, Colv=FALSE, trace="none", margins=c(10,10))
+heatmap.2(STmat,dendrogram="none",Rowv=FALSE, Colv=FALSE, trace="none", margins=c(10,10))
+dev.off()
+
+
