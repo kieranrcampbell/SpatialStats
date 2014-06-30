@@ -5,50 +5,56 @@
 #'
 #' @export
 SPData <- setClass("SPData",
-                   representation = list(protein.names = "character",
-                       Y = "matrix",
-                       X = "list",
+                   representation = list(names = "character",
+                       readouts = "matrix",
+                       cellNeighbours = "list",
                        nn.ids = "list",
                        size = "numeric",
                        id = "numeric",
-                       pos = "numeric",
-                       nn.counts = "list"))
+                       weights = "list",
+                       pos = "numeric"))
 
 #' Extracts the cell proteomics data
 #' @export
-setMethod("cells", "SPData", function(object) object@Y )
+setMethod("cells", "SPData", function(object) object@readouts )
 
 #' Returns the number of cells in the sample
 #' @export
-setMethod("nCells", "SPData", function(object) dim(object@Y)[1] )
+setMethod("nCells", "SPData", function(object) dim(object@readouts)[1] )
 
 #' Returns the number of proteins measured (number of channels)
 #' @export
-setMethod("nProt", "SPData", function(object) dim(object@Y)[2] )
+setMethod("nChannel", "SPData", function(object) dim(object@readouts)[2] )
 
 #' Returns the names of the proteins measured
 #' @export
-setMethod("pNames", "SPData", function(object) object@protein.names )
+setMethod("channels", "SPData", function(object) object@names )
 
 #' Returns a list of nearest neighbour readouts
 #'
 #' The ith entry is an n by m matrix, for cell i having n neighbours
 #' each of which have m channels
 #' @export
-setMethod("NN", "SPData", function(object) object@X )
-
+setMethod("neighbours", "SPData", function(object) {
+    #nn <- lapply(object@nn.ids, function(nn.id) { object@Y[nn.id,] })
+    #return(nn)
+    object@cellNeighbours
+})
+    
 #' Returns the cell sizes
 #'
 #' The ith entry is the size of the ith cell, as ordered by cells(X)
 #' @export
 setMethod("size", "SPData", function(object) object@size)
 
+setMethod("weights", "SPData", function(object) object@weights)
+
 #' Gives dimension of underlying matrix representation
 #'
 #' Returns number of cells and number of proteins as dimension of
 #' underlying matrix
 #' @export
-setMethod("dim", "SPData", function(x) c(nCells(x), nProt(x)))
+setMethod("dim", "SPData", function(x) c(nCells(x), nChannel(x)))
 
 #' Returns the sample id
 #'
@@ -68,7 +74,7 @@ setReplaceMethod("id", signature = "SPData",
 #' Returns the nearest neighbour ids
 #'
 #' @export
-setMethod("nnID", "SPData", function(object) object@nn.ids)
+setMethod("neighbourIDs", "SPData", function(object) object@nn.ids)
 
 
 
@@ -76,7 +82,7 @@ setMethod("nnID", "SPData", function(object) object@nn.ids)
 #' @export
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
-    cat(" ", nCells(object), " cells with ", nProt(object), " protein(s)\n", sep="")
+    cat(" ", nCells(object), " cells with ", nChannel(object), " channel(s)\n", sep="")
     invisible(NULL)
 
 })
@@ -85,7 +91,7 @@ setMethod("show", "SPData", function(object) {
 setValidity("SPData", function(object) {
     msg <- NULL
     valid <- TRUE
-    if(nCells(object) != length(NN(object))) {
+    if(nCells(object) != length(neighbours(object))) {
         print(nCells(object))
         valid <- FALSE
         msg <- c(msg, "Nearest neighbour data not available for all cells")
@@ -96,7 +102,7 @@ setValidity("SPData", function(object) {
         msg <- c(msg, "Number of cells must be equal to number of rows in cell by protein matrix")
     }
 
-    if(nProt(object) != dim(cells(object))[2]) {
+    if(nChannel(object) != dim(cells(object))[2]) {
         valid <- FALSE
         msg <- c(msg, "Number of proteins must be equal to number of columns in cell by protein matrix")
     }
@@ -104,17 +110,6 @@ setValidity("SPData", function(object) {
     if(valid) TRUE else msg
 
 })
-
-#' Sets the nearest neighbour data
-#'
-#' @name NN<-
-#' @export
-setReplaceMethod("NN", signature = "SPData",
-                 function(object, value) {
-                     object@X <- value
-                     validObject(object)
-                     return(object)
-                 })
 
 #' Sets the cell by cell measurements
 #'
@@ -130,15 +125,14 @@ setReplaceMethod("cells", signature = "SPData",
 
 #' Subset an SPData set
 #'
-#' Select SPData[i,j] for cells i and proteins j. Note this does not remove the cells
-#' designated as nearest neighbours.
+#' Select SPData[i,j] for cells i and channels j. 
 #' @export
 setMethod("[", "SPData", function(x, i, j) {
-    if(missing(j)) j <- 1:nProt(x)
+    if(missing(j)) j <- 1:nChannel(x)
     if(missing(i)) i <- 1:nCells(x)
 
     .n.proteins <- length(j)
-    .protein.names <- pNames(x)[j]
+    .protein.names <- channels(x)[j]
     .Y <- NULL
 
     .Y <- as.matrix(cells(x)[i,j])
