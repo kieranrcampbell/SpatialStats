@@ -175,6 +175,27 @@ setReplaceMethod("cellClass", signature="SPData",
                      return(object)
                  })
 
+#' Filter out nearest neighbours by cell class. If cell i has no
+#' nearest neighbours of class cell.class then numeric(0) is returned.
+#'
+#' @export
+neighbourClass <- function(sp, cell.class) {
+    X <- neighbours(sp)
+    nn.ids <- neighbourIDs(sp)
+
+    cell.select <- which(cellClass(sp) == cell.class)
+    
+    nn <- lapply(1:length(X), function(i) {
+        Xi <- X[[i]] ; ids <- nn.ids[[i]]
+        lvec <- ids %in% cell.select
+        if(is.matrix(Xi)) {
+            if(any(lvec)) return(Xi[lvec,]) else return(numeric(0))
+        } else {
+            if(lvec) return(Xi) else return(numeric(0))
+        }
+    })
+}
+
 
 ## setMethod("bplots", signature = "SPData",
 ##           function(object, ...) {
