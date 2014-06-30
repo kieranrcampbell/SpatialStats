@@ -145,3 +145,8 @@ sigcor1 <- cor(y.sig[sp1,])
 sigcor2 <- cor(y.sig[sp2,])
 
 heatmap.2(sigcor1, trace="none", symm=TRUE)
+
+
+## see how tumours are affected by stromal in signalling alone
+sps <- sp[cellClass(sp) == 2,]
+nn.list <- neighbourClass(sps, 1)
