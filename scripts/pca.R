@@ -122,3 +122,26 @@ sp.signalling <- sp[,signal.indices]
 y.sig <- cells(sp.signalling)
 y.sig.pc <- princomp(y.sig)
 y.sig.scores <- y.sig.pc$scores
+
+colnames(y.sig) <- channels(sp.signalling)
+y.melted <- as.vector(y.sig)
+
+df.sig <- data.frame(y=y.melted,cellc=rep(cellClass(sp),8))
+
+df.sig$channel <- rep(channels(sp.signalling), each=nCells(sp.signalling))
+
+sp1 <- which(cellClass(sp) == 1)
+sp2 <- which(cellClass(sp) == 2)
+keratin <- cells(sp)[,30]
+tumourID <- which.max(c(mean(keratin[sp1]), mean(keratin[sp2])))
+
+tumour.text <- paste("Tumour id is", tumourID) 
+
+plt <- ggplot(aes(y=y,x=channel, fill=as.factor(cellc)), data=df.sig) +
+    geom_boxplot() + theme_bw() + xlab(tumour.text)
+ggsave("tumour_stromal_signalling.pdf", plot=plt, width=12, height=7)
+
+sigcor1 <- cor(y.sig[sp1,])
+sigcor2 <- cor(y.sig[sp2,])
+
+heatmap.2(sigcor1, trace="none", symm=TRUE)
