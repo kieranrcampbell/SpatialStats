@@ -17,7 +17,7 @@ cols <- colorRampPalette(brewer.pal(10, "RdBu"))(256)
 exp <- 5
 sp <- spe[[exp]]
 
-protein.names <- pNames(sp)
+protein.names <- channels(sp)
 
 fit <- nnReg(sp)
 m <- getPMat(sp, fit, setOne=TRUE, alpha=0.01)
@@ -111,3 +111,14 @@ for(i in 1:nCells(sp)) {
 
 }
 
+#### phosphate only signalling
+
+protein.names <- channels(sp)
+
+signal.indices <- c(3,4,13,14,15,17,18,27)
+
+sp.signalling <- sp[,signal.indices]
+
+y.sig <- cells(sp.signalling)
+y.sig.pc <- princomp(y.sig)
+y.sig.scores <- y.sig.pc$scores

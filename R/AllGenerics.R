@@ -16,6 +16,8 @@ setGeneric("size", function(object) standardGeneric("size"))
 
 setGeneric("cells<-", function(object, value) standardGeneric("cells<-"))
 
+setGeneric("neighbours<-", function(object, value) standardGeneric("neighbours<-"))
+
 setGeneric("id", function(object) standardGeneric("id"))
 
 setGeneric("id<-", function(object, value) standardGeneric("id<-"))
@@ -24,7 +26,11 @@ setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
 
 setGeneric("weights", function(object) standardGeneric("weights"))
 
-setGeneric("boxplots", function(object) standardGeneric("boxplots"))
+setGeneric("bplots", function(object) standardGeneric("bplots"))
+
+setGeneric("cellClass", function(object) standardGeneric("cellClass"))
+
+setGeneric("cellClass<-", function(object, value) standardGeneric("cellClass<-"))
 
 ## For SPExp
 

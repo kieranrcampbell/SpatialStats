@@ -5,14 +5,15 @@
 #'
 #' @export
 SPData <- setClass("SPData",
-                   representation = list(names = "character",
+                   representation = list(channelNames = "character",
                        readouts = "matrix",
                        cellNeighbours = "list",
                        nn.ids = "list",
                        size = "numeric",
                        id = "numeric",
                        weights = "list",
-                       pos = "numeric"))
+                       pos = "numeric", ## not yet implemented
+                       cellClass = "numeric"))
 
 #' Extracts the cell proteomics data
 #' @export
@@ -28,7 +29,7 @@ setMethod("nChannel", "SPData", function(object) dim(object@readouts)[2] )
 
 #' Returns the names of the proteins measured
 #' @export
-setMethod("channels", "SPData", function(object) object@names )
+setMethod("channels", "SPData", function(object) object@channelNames )
 
 #' Returns a list of nearest neighbour readouts
 #'
@@ -36,7 +37,7 @@ setMethod("channels", "SPData", function(object) object@names )
 #' each of which have m channels
 #' @export
 setMethod("neighbours", "SPData", function(object) {
-    #nn <- lapply(object@nn.ids, function(nn.id) { object@Y[nn.id,] })
+    #nn <- lapply(object@nn.ids, function(nn.id) { object@readouts[nn.id,] })
     #return(nn)
     object@cellNeighbours
 })
@@ -76,9 +77,6 @@ setReplaceMethod("id", signature = "SPData",
 #' @export
 setMethod("neighbourIDs", "SPData", function(object) object@nn.ids)
 
-
-
-
 #' @export
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
@@ -117,7 +115,17 @@ setValidity("SPData", function(object) {
 #' @export
 setReplaceMethod("cells", signature = "SPData",
                  function(object, value) {
-                     object@Y <- value
+                     object@readouts <- value
+                     validObject(object)
+                     return(object)
+                 })
+
+#' Sets the neighbour measurements
+#'
+#' @name neighbours<-
+setReplaceMethod("neighbours", signature = "SPData",
+                 function(object, value) {
+                     object@cellNeighbours <- value
                      validObject(object)
                      return(object)
                  })
@@ -132,12 +140,12 @@ setMethod("[", "SPData", function(x, i, j) {
     if(missing(i)) i <- 1:nCells(x)
 
     .n.proteins <- length(j)
-    .protein.names <- channels(x)[j]
+    .channelNames <- channels(x)[j]
     .Y <- NULL
 
     .Y <- as.matrix(cells(x)[i,j])
 
-    .X <- lapply(NN(x), function(nn.cells) {
+    .X <- lapply(neighbours(x), function(nn.cells) {
         if(is.matrix(nn.cells)) nn.cells[,j] else t(as.matrix(nn.cells[j]))
     })
 
@@ -145,13 +153,44 @@ setMethod("[", "SPData", function(x, i, j) {
 
     .size <- size(x)[i]
 
-    SPData(protein.names = .protein.names,
-           Y = .Y,
-           X = .X,
+    SPData(channelNames = .channelNames,
+           readouts = .Y,
+           cellNeighbours = .X,
            size = .size)
 })
 
+#' If each cell has a class (e.g. tumour or stromal) then it can be
+#' assigned a numeric class which is retrieved through cellClass
+#'
+#' @export
+setMethod("cellClass", signature="SPData", function(object) object@cellClass)
 
+#' Sets the cell class
+#'
+#' @name cellClass<-
+#' @export
+setReplaceMethod("cellClass", signature="SPData",
+                 function(object, value) {
+                     object@cellClass <- value
+                     return(object)
+                 })
+
+
+## setMethod("bplots", signature = "SPData",
+##           function(object, ...) {
+##               readouts <- cells(object)
+##               read.min <- min(readouts) ; read.max <- max(readouts)
+##               if(nrow * ncol < nChannel(object)) {
+##                   print("Not enough channels to boxplot")
+##                   return(NULL)
+##               } else {
+##                   par(mfrow=c(nrow,ncol))
+##                   for(i in 1:(nrow*ncol)) {
+##                       boxplot(readouts[,i], ylim=c(read.min,read.max),
+##                               main=channels(object)[i],...=...)
+##                   }
+##               }
+##           })
 
 #' Loads an Xell matlab file into the SPData format
 #'
@@ -183,20 +222,20 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
 
     ## remove control isotopes
     xp.id <- setdiff(xp.id, grep(paste(control.isotopes, collapse="|"),xcolheads))
-    xprotein.names <- xcolheads[xp.id]
-    n.proteins <- length(xprotein.names)
+    xchannelNames <- xcolheads[xp.id]
+    n.proteins <- length(xchannelNames)
 
     ## now get cell-by-cell protein data
 
     ycolheads <- as.character(m$Xell.list.col)
     yp.id <- grep(")D", ycolheads)
     yp.id <- setdiff(yp.id, grep(paste(control.isotopes, collapse="|"),ycolheads))
-    yprotein.names <- ycolheads[yp.id]
+    ychannelNames <- ycolheads[yp.id]
 
-    if(!all.equal(yprotein.names,xprotein.names)) {
+    if(!all.equal(ychannelNames,xchannelNames)) {
         stop("Mismatch in X and Y protein names")
     }
-    protein.names <- xprotein.names
+    channelNames <- xchannelNames
 
     Y <- m$Xell.list
     Y <- Y[,yp.id]
@@ -221,9 +260,10 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
             xl[1]
         }
     })
-
-    sp <- SPData(protein.names=protein.names,
-                     Y=Y, X=X, size=as.numeric(m$Xell.size),id=id,
+    
+    sp <- SPData(channelNames=channelNames,
+                 readouts=Y, cellNeighbours=X,
+                 size=as.numeric(m$Xell.size),id=id,
                  nn.ids=nnids)
     sp <- preprocess(sp, rescale.data, scale.factor)
     return( sp )
@@ -231,7 +271,7 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
 
 preprocess <- function(sp, scale.data=FALSE, scale.factor=10000) {
     Y <- cells(sp)
-    X <- NN(sp)
+    X <- readouts(sp)
 
     mu.bg <- -min(Y)
 
@@ -248,18 +288,7 @@ preprocess <- function(sp, scale.data=FALSE, scale.factor=10000) {
         X <- lapply(X, function(x) x / scale.factor )
     }
 
-    cells(sp) <- Y ; NN(sp) <- X
+    cells(sp) <- Y ; neighbours(sp) <- X
 
     return( sp )
-}
-
-#' Ridge regression
-#' @export
-ridgeReg <- function(sp) {
-    Y <- cells(sp)
-
-    X <- t(sapply(NN(sp), function(x) {
-        if(!is.matrix(x)) x
-        else colMeans(x)
-    }))
 }
