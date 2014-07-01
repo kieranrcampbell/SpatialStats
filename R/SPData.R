@@ -41,14 +41,17 @@ setMethod("neighbours", "SPData", function(object) {
     #return(nn)
     object@cellNeighbours
 })
-    
+
 #' Returns the cell sizes
 #'
 #' The ith entry is the size of the ith cell, as ordered by cells(X)
 #' @export
 setMethod("size", "SPData", function(object) object@size)
 
-setMethod("weights", "SPData", function(object) object@weights)
+#' Returns a list of nearest neighbour boundary sizes (weights)
+#'
+#' @export
+setMethod("weight", "SPData", function(object) object@weights)
 
 #' Gives dimension of underlying matrix representation
 #'
@@ -133,7 +136,7 @@ setReplaceMethod("neighbours", signature = "SPData",
 
 #' Subset an SPData set
 #'
-#' Select SPData[i,j] for cells i and channels j. 
+#' Select SPData[i,j] for cells i and channels j.
 #' @export
 setMethod("[", "SPData", function(x, i, j) {
     if(missing(j)) j <- 1:nChannel(x)
@@ -184,7 +187,7 @@ neighbourClass <- function(sp, cell.class) {
     nn.ids <- neighbourIDs(sp)
 
     cell.select <- which(cellClass(sp) == cell.class)
-    
+
     nn <- lapply(1:length(X), function(i) {
         Xi <- X[[i]] ; ids <- nn.ids[[i]]
         lvec <- ids %in% cell.select
@@ -281,7 +284,7 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
             xl[1]
         }
     })
-    
+
     sp <- SPData(channelNames=channelNames,
                  readouts=Y, cellNeighbours=X,
                  size=as.numeric(m$Xell.size),id=id,

@@ -15,6 +15,6 @@ There is an example dataset included - to load it first load the library via `li
 * `neighbours(sp)` returns a list of length nCells, where entry *i*  is an *n* by channel matrix for cell *i* having *n* neighbours
 * `neighbourIDs(sp)` returns a list of the nearest neighbour cell identifiers
 * `size(sp)` returns a vector containing the cell sizes (in pixels)
-* `weights(sp)` returns the boundary sizes for each cell to its nearest neighbours
+* `weight(sp)` returns the boundary sizes for each cell to its nearest neighbours
 * `id(sp)` returns the sample ID
 * `cellClass(sp)` returns a vector of length nCells where each cell is assigned a class. Here there are 2 classes, with 1 corresponding to stromal and 2 corresponding to tumour.

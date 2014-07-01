@@ -24,7 +24,7 @@ setGeneric("id<-", function(object, value) standardGeneric("id<-"))
 
 setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
 
-setGeneric("weights", function(object) standardGeneric("weights"))
+setGeneric("weight", function(object) standardGeneric("weight"))
 
 setGeneric("bplots", function(object) standardGeneric("bplots"))
 
