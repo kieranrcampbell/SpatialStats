@@ -40,6 +40,6 @@ setGeneric("files", function(object) standardGeneric("files"))
 
 setGeneric("loadExp", function(object) standardGeneric("loadExp"))
 
-setGeneric("data", function(object) standardGeneric("data"))
+setGeneric("SPlist", function(object) standardGeneric("SPlist"))
 
 setGeneric("ids", function(object) standardGeneric("ids"))

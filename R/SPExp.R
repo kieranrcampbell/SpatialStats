@@ -76,8 +76,9 @@ setMethod("[[", "SPExp",
           })
 
 
+#' Returns the list of SPData samples
 #' @export
-setMethod("data", "SPExp",
+setMethod("SPlist", "SPExp",
           function(object) object@spdata)
 
 #' @export
