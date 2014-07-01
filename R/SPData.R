@@ -237,7 +237,8 @@ setMethod("channelPlot", signature("SPData", "numeric"),
               plotdf <- data.frame(exprs=readouts.melted$value,
                                    channel=readouts.melted$X2,
                                    cell.class = rep(classes,length(channel.ids)))
-              ggplot(aes(x=channel,y=exprs,fill=cell.class), data=plotdf) + geom_boxplot()
+              ggplot(aes(x=channel,y=exprs,fill=cell.class), data=plotdf) + geom_boxplot() +
+                  theme_bw() + theme(axis.text.x = element_text(angle=90, hjust=1))
           })
 
 
