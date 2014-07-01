@@ -18,3 +18,8 @@ There is an example dataset included - to load it first load the library via `li
 * `weight(sp)` returns the boundary sizes for each cell to its nearest neighbours
 * `id(sp)` returns the sample ID
 * `cellClass(sp)` returns a vector of length nCells where each cell is assigned a class. Here there are 2 classes, with 1 corresponding to stromal and 2 corresponding to tumour.
+
+The class `SPData` also contains several plotting routines:
+
+* `boxplots(sp,4,8)` plots the ranges of each of the 32 channels (in 4 rows by 8 columns)
+* `channelPlot(sp, 1:4)` provides boxplots of the first 4 channels but highlighting differences between different classes of data (class1 vs class2)
