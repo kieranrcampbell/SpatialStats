@@ -207,6 +207,24 @@ setMethod("neighbourClass", signature("SPData","numeric"),
               nn
           })
 
+#' Filter out nearest neighbours by cell class. If cell i has no
+#' nearest neighbours of class cell.class then numeric(0) is returned.
+#'
+#' @param NN Neighbour list (e.g. via neighbours(sp))
+#' @param channel.ids A channel list to select out
+#'
+#' @export
+neighbourChannel <- function(NN, channel.ids) {
+    nn <- lapply(NN, function(Xi) {
+        if(is.matrix(Xi)) {
+            Xi[,channel.ids]
+        } else {
+            if(length(Xi) > 0) Xi[channel.ids] else numeric(0)
+        }
+    })
+    nn
+}
+
 
 #################################################
 ## Plotting & Visualisation methods start here ##

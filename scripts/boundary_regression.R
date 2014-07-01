@@ -6,118 +6,99 @@ library(gplots)
 
 load_all("..")
 
-load("~/ebi/data/spe.RData")
-
-spid <- 5
-
-sp <- spe[[spid]]
-
-Y <- cells(sp)
-
-Y <- Y - min(Y) + 1
-
-ycor <- cor(t(Y))
-
-y.pc <- princomp(Y)
-
-y.scores <- y.pc$scores
+load("~/ebi/sp/data/sp5.RData")
 
 
-d <- y.scores[,1:3]
-
-emobj <- simple.init(d, nclass=2)
-emobj <- shortemcluster(d, emobj)
-ret <- emcluster(d, emobj, assign.class=TRUE)
-
-nnids <- nnID(sp)
-
-clust <- ret$class
+clust <- cellClass(sp)
 
 cl1 <- which(clust == 1)
 cl2 <- which(clust == 2)
 
+Y <- cells(sp)
 
 ## find out which is tumour and which is stromal
-kerindex <- grep("Keratin",pNames(sp))
+kerindex <- grep("Keratin",channels(sp))
 kerReads <- Y[,kerindex]
 tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
 
 boundary <- NULL
 
-for(i in cl1) {
-    nn <- nnids[[i]]
-    if(length(intersect(nn,cl2)) > 0) boundary <- c(boundary, i)
-}
 
-for(i in cl2) {
-    nn <- nnids[[i]]
-    if(length(intersect(nn, cl1)) > 0) boundary <- c(boundary, i)
-}
+###############################################################################
+## We want to regress the response variables (responseSubset) in the tumour  ##
+## (group 2) with EMT interesting values on the phospho signalling molecules ##
+## in the stromal region (group 1)                                           ##
+###############################################################################
 
-protein.names <- pNames(sp)
+## regressing on 1, so choose only NN cells in 1
+NN <- neighbourClass(sp, 2)
+## regressing only on phosphates, so
+phInd <- c(3,4,13,14,15,17,18,27)
+phNames <- channels(sp)[phInd]
+NN <- neighbourChannel(NN, phInd)
+
+## find which cells have neighbours of type 1
+hasType2N <- sapply(NN, function(x) length(x) > 0)
+
+## find out type 2 tissues with type 1 neighbours
+responseCells <- intersect(which(hasType2N), cl2)
+
+
+
+protein.names <- channels(sp)
 getProteinIds <- function(proteinNames,proteinList) {
     p.indices <- sapply(proteinList, grep, proteinNames)
     p.indices
 }
 
+responseNames <- c("Cadherin",
+                   "bcat",
+                   "Vimentin",
+                   "CD44","Twist",
+                   "Slug", "NFkB",
+                   "EGFR")
 
-responseSubset <- getProteinIds(protein.names,
-                                c("Cadherin",
-                                  "bcat",
-                                  "Vimentin",
-                                  "CD44","Twist",
-                                  "Slug", "NFkB",
-                                  "EGFR"))
+responseSubset <- getProteinIds(protein.names, responseNames)
 
-#responseSubset <- getProteinIds(protein.names,c("Slug"))
 
-dependentRemoveSubset <- getProteinIds(protein.names,
-                                       c("Keratin",
-                                         "ER", "PR",
-                                         "Ki67","pSHP",
-                                         "Caspase", "Panactin",
-                                         "Her2", "CAH9", "CK7","H3"))
+## select out response channels
+Y <- Y[,responseSubset]
 
-dependentRemoveSubset <- unlist(dependentRemoveSubset)
+## select out response cells
+Y <- Y[responseCells,]
+NN <- NN[responseCells]
 
-pset <- 1:length(protein.names)
+## average over nearest neighbours
+X <- lapply(NN, function(nn) {
+    if(is.matrix(nn)) colMeans(nn) else nn
+})
 
-pset <- setdiff(pset, dependentRemoveSubset)
+X <- matrix(unlist(X), ncol=length(phInd), byrow=TRUE)
 
-cell.class <- ret$class
+## finally add colnames and construct linear model
 
-weight.name <- paste("../data/boundary_sizes",spid,".mat",sep="")
+fit <- lm(Y ~ X)
 
-weights <- readMat(weight.name)
-weights <- weights[[1]]
-weights <- lapply(weights, as.vector)
+ntrial <- 100
 
-regList <- weightedSubsetBoundaryRegression(sp, cell.class, tumourID, boundary,
-                                        weights, responseSubset, pset)
+## we have 213 cells; let's' sample 170 of them
 
-fit <- regList$fit
+res <- matrix(0, nrow=8, ncol=8)
+colnames(res) <- responseNames
+rownames(res) <- phNames
 
-s <- summary(fit)
+for(n in 1:ntrial) {
+    s <- sample(1:213, 170)
+    y <- Y[s,] ; x <- X[s,]
 
-TTmat <- matrix(0, ncol=length(responseSubset),nrow=length(pset))
-STmat <- matrix(0, ncol=length(responseSubset),nrow=length(pset))
+    fit <- lm(y ~ x)
+    suma <- summary(fit)
 
-colnames(TTmat) <- colnames(STmat) <- protein.names[responseSubset]
-rownames(TTmat) <- rownames(STmat) <- protein.names[pset]
+    for(i in 1:8) {
+        co <- suma[[i]]$coefficients
+        co <- co[-1,4]
+        co <- as.numeric(co < 0.01)
+        res[,i] <- res[,i] + co
+    }
 
-for(i in 1:length(s)) {
-    coef <- s[[i]]$coefficients
-    sig <- as.numeric(coef[-1,4] < 0.05)
-    mid <- length(sig)/2
-    STmat[,i] <- sig#[1:mid]
-    #TTmat[,i] <- sig[-(1:mid)]
 }
-
-pdfname <- paste("../img/boundary_hmap_sample",spid,".pdf",sep="")
-
-pdf(pdfname,width=6, height=6)
-#heatmap.2(TTmat,dendrogram="none",Rowv=FALSE, Colv=FALSE, trace="none", margins=c(10,10))
-heatmap.2(STmat,dendrogram="none",Rowv=FALSE, Colv=FALSE, trace="none", margins=c(10,10))
-dev.off()
-
-
