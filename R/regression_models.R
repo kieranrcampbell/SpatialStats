@@ -6,7 +6,7 @@
 setMethod("nnReg", "SPData", function(object) {
     Y <- cells(object)
 
-    X <- t(sapply(NN(object), function(x) {
+    X <- t(sapply(nieghbours(object), function(x) {
         if(!is.matrix(x)) x
         else colMeans(x)
     }))
@@ -17,7 +17,7 @@ setMethod("nnReg", "SPData", function(object) {
 
 #' Get adjacency matrix from fit
 #'
-#' This function constructs a nProt by nProt directed
+#' This function constructs a nChannel by nChannel directed
 #' adjacency matrix from the fit
 #'
 #' @param spdata The SPdata object the fit was made from
@@ -29,7 +29,7 @@ getAdj <- function(spdata, fit, alpha=0.05) {
     ## returns an adjacency matrix from a general linear model fit
     s <- summary(fit)
 
-    n.proteins <- nProt(spdata)
+    n.proteins <- nChannel(spdata)
 
     A <- matrix(0,nrow=n.proteins,ncol=n.proteins)
 
@@ -41,14 +41,14 @@ getAdj <- function(spdata, fit, alpha=0.05) {
         A[,i] <- as.numeric(p.vals < alpha)
     }
 
-    rownames(A) <- colnames(A)  <- pNames(spdata)
+    rownames(A) <- colnames(A)  <- channels(spdata)
     return ( A )
 }
 
 
 #' Get p-value matrix from fit
 #'
-#' This function constructs a nProt by nProt directed
+#' This function constructs a nChannel by nChannel directed
 #' matrix of p values
 #'
 #' @param spdata The SPdata object the fit was made from
@@ -61,7 +61,7 @@ getPMat <- function(spdata, fit, setOne=FALSE, alpha=0.05) {
     ## returns an adjacency matrix from a general linear model fit
     s <- summary(fit)
 
-    n.proteins <- nProt(spdata)
+    n.proteins <- nChannel(spdata)
 
     A <- matrix(0,nrow=n.proteins,ncol=n.proteins)
 
@@ -78,16 +78,16 @@ getPMat <- function(spdata, fit, setOne=FALSE, alpha=0.05) {
         A[,i] <- pcol
     }
 
-    rownames(A) <- colnames(A)  <- pNames(spdata)
+    rownames(A) <- colnames(A)  <- channels(spdata)
     return ( A )
 }
 
 
 reweightReg <- function(spdata, A) {
     fits <- list()
-    length(fits) <- nProt(spdata)
+    length(fits) <- nChannel(spdata)
 
-    for(p in 1:nProt(spdata)) {
+    for(p in 1:nChannel(spdata)) {
         Y <- as.numeric(cells(spdata[,p]))
 
         ## which independent variables are we regressing against?
@@ -97,16 +97,16 @@ reweightReg <- function(spdata, A) {
         ## we just return NULL
         if(length(regressors) > 0) {
 
-            ## reduced NN matrix - only use significant regression coefficients
+            ## reduced nieghbours matrix - only use significant regression coefficients
             red.nn <- spdata[,as.logical(A[,p])]
 
             X <- NULL
             ## need to treat n = 1 and n > 1 proteins differently
 
-            if(nProt(red.nn) > 1) {
-                X <- t(sapply(NN(red.nn), colMeans))
+            if(nChannel(red.nn) > 1) {
+                X <- t(sapply(nieghbours(red.nn), colMeans))
             } else {
-                X <- as.matrix(sapply(NN(red.nn), mean))
+                X <- as.matrix(sapply(nieghbours(red.nn), mean))
                                         #X <- t(X)
             }
 
@@ -144,17 +144,17 @@ weightedSubsetBoundaryRegression <- function(sp, cellClasses, responseClass, bou
     print(length(cellBoundary[[1]]))
     print(length(cellBoundary[[2]]))
 
-    X <- weightNN(NN(sp), weights)
+    X <- weightNN(nieghbours(sp), weights)
     ## list involving only nn of class 1
-    X.class1 <- separateNN(X, nnID(sp), cl1)
+    X.class1 <- separatenieghbours(X, nnID(sp), cl1)
 
     ## list involving only nn of class 2
-    X.class2 <- separateNN(X, nnID(sp), cl2)
+    X.class2 <- separatenieghbours(X, nnID(sp), cl2)
 
-    nProtein <- length(pNames(sp))
+    nChannelein <- length(channels(sp))
 
-    X1 <- sumNN(X.class1, nProtein)
-    X2 <- sumNN(X.class2, nProtein)
+    X1 <- sumNN(X.class1, nChannelein)
+    X2 <- sumNN(X.class2, nChannelein)
 
     #X1 <- t(X1) ; X2 <- t(X2)
     ## select out response variables of interest
@@ -185,7 +185,7 @@ weightedSubsetBoundaryRegression <- function(sp, cellClasses, responseClass, bou
 #' of a desired class, given the list X, list of nearest
 #' neighbour ids nn.ids and the list of indices in desired
 #' class (classList)
-separateNN <- function(X, nnIds, classList) {
+separatenieghbours <- function(X, nnIds, classList) {
     X.new <- lapply(1:length(X), function(i) {
         x <- X[[i]]
         nnid <- nnIds[[i]]

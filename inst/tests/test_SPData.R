@@ -14,11 +14,11 @@ test_that("SPData is initialised properly", {
 
     })
 
-    sp <- SPData(protein.names=protein.names,
-                 Y=Y,X=X)
+    sp <- SPData(channelNames=protein.names,
+                 readouts=Y,cellNeighbours=X)
 
     expect_that(nCells(sp), equals(ncells))
-    expect_that(nProt(sp), equals(nprot))
-    expect_that(length(pNames(sp)), equals(nprot))
+    expect_that(nChannel(sp), equals(nprot))
+    expect_that(length(channels(sp)), equals(nprot))
 })
 

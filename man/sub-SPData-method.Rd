@@ -36,7 +36,6 @@
   \code{integer(0)}.  }
 }
 \description{
-Select SPData[i,j] for cells i and proteins j. Note this
-does not remove the cells designated as nearest neighbours.
+Select SPData[i,j] for cells i and channels j.
 }
 
