@@ -221,6 +221,26 @@ setMethod("boxplots", signature("SPData", "numeric", "numeric"),
               }
           })
 
+#' Boxplots the distributions of channels depending on their class
+#'
+#' @param channel.ids A numeric vector of channel indicies
+#' @export
+setMethod("channelPlot", signature("SPData", "numeric"),
+          function(object, channel.ids) {
+              library(ggplot2)
+              library(reshape)
+              readouts <- cells(object)
+              classes <- as.factor(cellClass(object))
+              readouts <- readouts[,channel.ids]
+              colnames(readouts) <- channels(sp)[channel.ids]
+              readouts.melted <- melt(readouts)
+              plotdf <- data.frame(exprs=readouts.melted$value,
+                                   channel=readouts.melted$X2,
+                                   cell.class = rep(classes,length(channel.ids)))
+              ggplot(aes(x=channel,y=exprs,fill=cell.class), data=plotdf) + geom_boxplot()
+          })
+
+
 #' Loads an Xell matlab file into the SPData format
 #'
 #' This function parses the matlab files, pulling out relevant proteins

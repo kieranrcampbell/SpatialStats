@@ -28,6 +28,8 @@ setGeneric("weight", function(object) standardGeneric("weight"))
 
 setGeneric("boxplots", function(object, nrow, ncol) standardGeneric("boxplots"))
 
+setGeneric("channelPlot", function(object, channel.ids) standardGeneric("channelPlot"))
+
 setGeneric("cellClass", function(object) standardGeneric("cellClass"))
 
 setGeneric("cellClass<-", function(object, value) standardGeneric("cellClass<-"))
