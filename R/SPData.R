@@ -199,22 +199,27 @@ neighbourClass <- function(sp, cell.class) {
     })
 }
 
-
-## setMethod("bplots", signature = "SPData",
-##           function(object, ...) {
-##               readouts <- cells(object)
-##               read.min <- min(readouts) ; read.max <- max(readouts)
-##               if(nrow * ncol < nChannel(object)) {
-##                   print("Not enough channels to boxplot")
-##                   return(NULL)
-##               } else {
-##                   par(mfrow=c(nrow,ncol))
-##                   for(i in 1:(nrow*ncol)) {
-##                       boxplot(readouts[,i], ylim=c(read.min,read.max),
-##                               main=channels(object)[i],...=...)
-##                   }
-##               }
-##           })
+#' Boxplots the distribution for each channel
+#'
+#' @param nrow Number of rows of the boxplots to plot
+#' @param ncol Number of columns of boxplots to plot
+#'
+#' @export
+setMethod("boxplots", signature("SPData", "numeric", "numeric"),
+          function(object, nrow, ncol) {
+              readouts <- cells(object)
+              read.boundaries <- quantile(readouts, probs=c(0.01, 0.99))
+              if(nrow * ncol > nChannel(object)) {
+                  print("Not enough channels to boxplot")
+                  return(NULL)
+              } else {
+                  par(mfrow=c(nrow,ncol), mar=c(1.8,1.8,1.8,1.8))
+                  for(i in 1:(nrow*ncol)) {
+                      boxplot(readouts[,i], ylim=read.boundaries,
+                              main=channels(object)[i])
+                  }
+              }
+          })
 
 #' Loads an Xell matlab file into the SPData format
 #'

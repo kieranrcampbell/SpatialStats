@@ -26,7 +26,7 @@ setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
 
 setGeneric("weight", function(object) standardGeneric("weight"))
 
-setGeneric("bplots", function(object) standardGeneric("bplots"))
+setGeneric("boxplots", function(object, nrow, ncol) standardGeneric("boxplots"))
 
 setGeneric("cellClass", function(object) standardGeneric("cellClass"))
 
