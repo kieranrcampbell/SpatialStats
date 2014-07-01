@@ -162,6 +162,12 @@ setMethod("[", "SPData", function(x, i, j) {
            size = .size)
 })
 
+###########################################
+## Methods for dealing with cell class & ##
+##     boundaries start here             ##
+###########################################
+
+
 #' If each cell has a class (e.g. tumour or stromal) then it can be
 #' assigned a numeric class which is retrieved through cellClass
 #'
@@ -182,22 +188,29 @@ setReplaceMethod("cellClass", signature="SPData",
 #' nearest neighbours of class cell.class then numeric(0) is returned.
 #'
 #' @export
-neighbourClass <- function(sp, cell.class) {
-    X <- neighbours(sp)
-    nn.ids <- neighbourIDs(sp)
+setMethod("neighbourClass", signature("SPData","numeric"),
+          function(object, cell.class) {
+              X <- neighbours(sp)
+              nn.ids <- neighbourIDs(sp)
+              cell.select <- which(cellClass(sp) == cell.class)
 
-    cell.select <- which(cellClass(sp) == cell.class)
+              nn <- lapply(1:length(X), function(i) {
+                  Xi <- X[[i]] ; ids <- nn.ids[[i]]
 
-    nn <- lapply(1:length(X), function(i) {
-        Xi <- X[[i]] ; ids <- nn.ids[[i]]
-        lvec <- ids %in% cell.select
-        if(is.matrix(Xi)) {
-            if(any(lvec)) return(Xi[lvec,]) else return(numeric(0))
-        } else {
-            if(lvec) return(Xi) else return(numeric(0))
-        }
-    })
-}
+                  lvec <- ids %in% cell.select
+                  if(is.matrix(Xi)) {
+                      if(any(lvec)) return(Xi[lvec,]) else return(numeric(0))
+                  } else {
+                      if(lvec) return(Xi) else return(numeric(0))
+                  }
+              })
+              nn
+          })
+
+
+#################################################
+## Plotting & Visualisation methods start here ##
+#################################################
 
 #' Boxplots the distribution for each channel
 #'
@@ -240,6 +253,12 @@ setMethod("channelPlot", signature("SPData", "numeric"),
               ggplot(aes(x=channel,y=exprs,fill=cell.class), data=plotdf) + geom_boxplot() +
                   theme_bw() + theme(axis.text.x = element_text(angle=90, hjust=1))
           })
+
+
+#######################################
+## Methods for importing from matlab ##
+## files start here                  ##
+#######################################
 
 
 #' Loads an Xell matlab file into the SPData format

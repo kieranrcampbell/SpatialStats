@@ -1,5 +1,10 @@
 
 ## For SPData
+
+#######################
+## Set / Get methods ##
+#######################
+
 setGeneric("cells", function(object) standardGeneric("cells"))
 
 setGeneric("nCells", function(object) standardGeneric("nCells"))
@@ -26,13 +31,24 @@ setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
 
 setGeneric("weight", function(object) standardGeneric("weight"))
 
+########################
+## Plotting functions ##
+########################
+
 setGeneric("boxplots", function(object, nrow, ncol) standardGeneric("boxplots"))
 
 setGeneric("channelPlot", function(object, channel.ids) standardGeneric("channelPlot"))
 
+
+#####################################
+## Boundary / cell class functions ##
+#####################################
+
 setGeneric("cellClass", function(object) standardGeneric("cellClass"))
 
 setGeneric("cellClass<-", function(object, value) standardGeneric("cellClass<-"))
+
+setGeneric("neighbourClass", function(object, cell.class) standardGeneric("neighbourClass"))
 
 ## For SPExp
 
