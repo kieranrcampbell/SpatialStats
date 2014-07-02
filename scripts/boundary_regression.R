@@ -26,6 +26,7 @@ boundary <- NULL
 
 doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
     source("parse-nn.R")
+    set.seed(31)
 
 ###############################################################################
     ## We want to regress the response variables (responseSubset) in the tumour  ##
@@ -39,7 +40,7 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
     print(phNames)
 
     Y <- cells(sp)
-    X <- meanNN(neighbours(sp))
+    X <- neighbourMean(sp, FALSE, TRUE)
     X <- X[,phInd]
     colnames(X) <- phNames
 
