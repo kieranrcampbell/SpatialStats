@@ -50,6 +50,8 @@ setGeneric("cellClass<-", function(object, value) standardGeneric("cellClass<-")
 
 setGeneric("neighbourClass", function(object, cell.class) standardGeneric("neighbourClass"))
 
+setGeneric("findBoundary", function(object) standardGeneric("findBoundary"))
+
 ## For SPExp
 
 setGeneric("getDir", function(object) standardGeneric("getDir"))

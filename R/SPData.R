@@ -225,9 +225,31 @@ neighbourChannel <- function(NN, channel.ids) {
     nn
 }
 
+#' Find the cells that lie on the boundary between two classes
+#' (currently only implemented for 2 classes)
+#'
+#' @export
+setMethod("findBoundary", signature("SPData"),
+          function(object) {
+              classes <- cellClass(object)
+              cl1 <- which(classes == 1) ; cl2 <- which(classes == 2)
+              nn.ids <- neighbourIDs(object)
+
+              cell1neighbours <- sapply(cl1, function(cellid) {
+                  nn.id <- nn.ids[[cellid]]
+                  any(nn.id %in% cl2)
+              })
+
+              cell2neighbours <- sapply(cl2, function(cellid) {
+                  nn.id <- nn.ids[[cellid]]
+                  any(nn.id %in% cl1)
+              })
+
+              boundary <- sort(c(cl1[cell1neighbours], cl2[cell2neighbours]))
+          })
 
 #################################################
-## Plotting & Visualisation methods start here ##
+## plotting & Visualisation methods start here ##
 #################################################
 
 #' Boxplots the distribution for each channel
