@@ -52,6 +52,12 @@ setGeneric("neighbourClass", function(object, cell.class) standardGeneric("neigh
 
 setGeneric("findBoundary", function(object) standardGeneric("findBoundary"))
 
+###########################################
+## Nearest neighbour averaging functions ##
+###########################################
+
+setGeneric("neighbourMean", function(object, useWeights, normalise) standardGeneric("neighbourMean"))
+
 ## For SPExp
 
 setGeneric("getDir", function(object) standardGeneric("getDir"))

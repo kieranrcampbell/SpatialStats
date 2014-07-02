@@ -162,6 +162,56 @@ setMethod("[", "SPData", function(x, i, j) {
            size = .size)
 })
 
+
+#############################################
+## Methods for nearest neighbour averaging ##
+#############################################
+
+#' Averages over the nearest neighbour cells, going from a
+#' list of length cell to a cell by channel matrix
+#'
+#' @param useWeights If TRUE then nearest neighbours are weighted by cell boundary size
+#' @param normalise If TRUE then then each channel is normalised to mean 0 sd 1
+#'
+#' @export
+setMethod("neighbourMean", signature("SPData", "logical", "logical"),
+          function(object, useWeights, normalise) {
+              #if(missing(useWeights)) useWeights <- FALSE
+              #if(missing(normalise)) normalise <- TRUE
+
+
+              ## average over nearest neighbours then means
+              X <- neighbours(object)
+              weights <- NULL
+              if(useWeights) weights <- weight(object)
+
+              X <- lapply(1:length(X), function(i) {
+                  nn <- X[[i]]
+
+                  if(is.matrix(nn)) {
+                      if(useWeights) {
+                          w <- weights[[i]]
+                          total.boundary <- sum(w)
+                          nn <- nn * w / total.boundary ## IMPORTANT: matrix * vector multiplication is by column
+                          colSums(nn)
+                      } else {
+                          colMeans(nn)
+                      }
+                  }
+                  else {
+                      nn
+                  }
+              })
+
+              X <- matrix(unlist(X), nrow=length(X), byrow=TRUE)
+
+              if(normalise) X <- apply(X, 2, function(x) (x - mean(x))/sd(x))
+
+              colnames(X) <- channels(sp)
+              X
+          })
+
+
 ###########################################
 ## Methods for dealing with cell class & ##
 ##     boundaries start here             ##

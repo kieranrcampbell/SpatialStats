@@ -24,7 +24,7 @@ tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
 boundary <- NULL
 
 
-doLMTest <- function(sp, classWithin,clust, alpha=0.01) {
+doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
     source("parse-nn.R")
 
 ###############################################################################
@@ -38,8 +38,15 @@ doLMTest <- function(sp, classWithin,clust, alpha=0.01) {
     phNames <- channels(sp)[phInd]
     print(phNames)
 
+    Y <- cells(sp)
+    X <- meanNN(neighbours(sp))
+    X <- X[,phInd]
+    colnames(X) <- phNames
 
+    ### want only cells that lie well within the tumour
 
+    cl <- which(cellClass(sp) == tumourID)
+    responseCells <- setdiff(cl, findBoundary(sp))
 
     protein.names <- channels(sp)
     getProteinIds <- function(proteinNames,proteinList) {
@@ -62,28 +69,33 @@ doLMTest <- function(sp, classWithin,clust, alpha=0.01) {
 
     ## select out response cells
     Y <- Y[responseCells,]
-    NN <- NN[responseCells]
 
-    ## average over nearest neighbours
-    X <- lapply(NN, function(nn) {
-        if(is.matrix(nn)) colMeans(nn) else nn
-    })
+    X <- X[responseCells,]
 
-    X <- matrix(unlist(X), ncol=length(phInd), byrow=TRUE)
+    ## remove highly correlated predictors
+    if(remove.pred) {
+        remove.predictors <- removePredictor(X, phNames)
+        X <- X[,-remove.predictors]
+    }
 
     ## finally add colnames and construct linear model
 
     fit <- lm(Y ~ X)
 
-    ntrial <- 100
+    ntrial <- 1000
 
     ## let's sample 80% of cells
 
-    nCellSample <- round(0.8 * dim(Y)[1])
+    nCellSample <- round(0.7 * dim(Y)[1])
 
-    res <- matrix(0, nrow=8, ncol=8)
+    res <- matrix(0, nrow=dim(X)[2], ncol=dim(Y)[2])
     colnames(res) <- responseNames
-    rownames(res) <- phNames
+
+    if(remove.pred) {
+        rownames(res) <- phNames[-remove.predictors]
+    } else {
+        rownames(res) <- phNames
+    }
 
     for(n in 1:ntrial) {
         s <- sample(1:(dim(Y)[1]), nCellSample)
