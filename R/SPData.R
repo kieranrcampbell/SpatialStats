@@ -423,6 +423,7 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
     ## want to LOESS normalise against cell size
     sizes <- as.numeric(m$Xell.size)
     Y <- loessNormalise(Y, sizes)
+    Y <- totalProteinNormalise(Y)
 
 
     ## now on to constructing X, the nearest neighbour matrix

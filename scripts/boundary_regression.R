@@ -24,7 +24,7 @@ tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
 boundary <- NULL
 
 
-doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.05) {
+doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
     #source("parse-nn.R")
     set.seed(31)
 
@@ -40,14 +40,19 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.05) {
     print(phNames)
 
     Y <- cells(sp)
-    X <- neighbourMean(sp, TRUE, TRUE)
+    X <- neighbourMean(sp, useWeights, TRUE)
     X <- X[,phInd]
     colnames(X) <- phNames
 
     ### want only cells that lie well within the tumour
 
-    cl <- which(cellClass(sp) == tumourID)
-    responseCells <- setdiff(cl, findBoundary(sp))
+    responseCells <- NULL
+    if(!is.null(tumourID)) {
+        cl <- which(cellClass(sp) == tumourID)
+        responseCells <- setdiff(cl, findBoundary(sp))
+    } else {
+        responseCells <- 1:nCells(sp)
+    }
 
     protein.names <- channels(sp)
     getProteinIds <- function(proteinNames,proteinList) {
@@ -72,11 +77,6 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.05) {
     Y <- Y[responseCells,]
 
     X <- X[responseCells,]
-
-    ## remove highly correlated predictors
-    if(remove.pred) {
-        X <- VIFRemove(X)
-    }
 
     ## finally add colnames and construct linear model
 
@@ -112,21 +112,25 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.05) {
 }
 
 
-plsr <- function(sp, tumourID) {
+plsr <- function(sp, tumourID=NULL, useWeights=TRUE) {
     library(plsdepot)
     phInd <- c(3,4,13,14,15,17,18,27)
     phNames <- channels(sp)[phInd]
     print(phNames)
 
     Y <- cells(sp)
-    X <- neighbourMean(sp, TRUE, TRUE)
+    X <- neighbourMean(sp, useWeights, TRUE)
     X <- X[,phInd]
     colnames(X) <- phNames
 
     ### want only cells that lie well within the tumour
 
-    cl <- which(cellClass(sp) == tumourID)
-    responseCells <- setdiff(cl, findBoundary(sp))
+    if(!is.null(tumourID)) {
+        cl <- which(cellClass(sp) == tumourID)
+        responseCells <- setdiff(cl, findBoundary(sp))
+    } else {
+        responseCells <- 1:nCells(sp)
+    }
 
     protein.names <- channels(sp)
     getProteinIds <- function(proteinNames,proteinList) {
