@@ -39,7 +39,6 @@ setGeneric("boxplots", function(object, nrow, ncol) standardGeneric("boxplots"))
 
 setGeneric("channelPlot", function(object, channel.ids) standardGeneric("channelPlot"))
 
-
 #####################################
 ## Boundary / cell class functions ##
 #####################################

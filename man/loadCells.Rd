@@ -16,6 +16,7 @@ loadCells(filename, id = -1, control.isotopes = c("Xe131", "Cs133",
 \description{
 This function parses the matlab files, pulling out relevant
 proteins in the 'D' channel and validates that the correct
-proteins are present.
+proteins are present. Matlab files can be found at
+https://s3.amazonaws.com/supplemental.cytobank.org/report_data/report_113/Figure_5/Figure_5_raw_image_files.zip
 }
 

@@ -8,5 +8,6 @@ Depends:
 Imports:
     R.matlab,
     ggplot2,
-    reshape
+    reshape,
+    corrplot
 License: MIT

@@ -24,8 +24,8 @@ tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
 boundary <- NULL
 
 
-doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
-    source("parse-nn.R")
+doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.05) {
+    #source("parse-nn.R")
     set.seed(31)
 
 ###############################################################################
@@ -40,7 +40,7 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
     print(phNames)
 
     Y <- cells(sp)
-    X <- neighbourMean(sp, FALSE, TRUE)
+    X <- neighbourMean(sp, TRUE, TRUE)
     X <- X[,phInd]
     colnames(X) <- phNames
 
@@ -75,8 +75,7 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
 
     ## remove highly correlated predictors
     if(remove.pred) {
-        remove.predictors <- removePredictor(X, phNames)
-        X <- X[,-remove.predictors]
+        X <- VIFRemove(X)
     }
 
     ## finally add colnames and construct linear model
@@ -92,11 +91,7 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
     res <- matrix(0, nrow=dim(X)[2], ncol=dim(Y)[2])
     colnames(res) <- responseNames
 
-    if(remove.pred) {
-        rownames(res) <- phNames[-remove.predictors]
-    } else {
-        rownames(res) <- phNames
-    }
+    rownames(res) <- colnames(X)
 
     for(n in 1:ntrial) {
         s <- sample(1:(dim(Y)[1]), nCellSample)
@@ -114,4 +109,50 @@ doLMTest <- function(sp,tumourID,remove.pred=FALSE, alpha=0.01) {
 
     }
     return(res)
+}
+
+
+plsr <- function(sp, tumourID) {
+    library(plsdepot)
+    phInd <- c(3,4,13,14,15,17,18,27)
+    phNames <- channels(sp)[phInd]
+    print(phNames)
+
+    Y <- cells(sp)
+    X <- neighbourMean(sp, TRUE, TRUE)
+    X <- X[,phInd]
+    colnames(X) <- phNames
+
+    ### want only cells that lie well within the tumour
+
+    cl <- which(cellClass(sp) == tumourID)
+    responseCells <- setdiff(cl, findBoundary(sp))
+
+    protein.names <- channels(sp)
+    getProteinIds <- function(proteinNames,proteinList) {
+        p.indices <- sapply(proteinList, grep, proteinNames)
+        p.indices
+    }
+
+    responseNames <- c("Cadherin",
+                       "bcat",
+                       "Vimentin",
+                       "CD44","Twist",
+                       "Slug", "NFkB",
+                       "EGFR")
+
+    responseSubset <- getProteinIds(protein.names, responseNames)
+
+
+    ## select out response channels
+    Y <- Y[,responseSubset]
+
+    ## select out response cells
+    Y <- Y[responseCells,]
+
+    X <- X[responseCells,]
+
+
+    pls <- plsreg2(X, Y)
+    return(pls)
 }

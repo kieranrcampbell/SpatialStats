@@ -6,7 +6,8 @@
 #' @export
 SPData <- setClass("SPData",
                    representation = list(channelNames = "character",
-                       readouts = "matrix",
+                       readouts = "matrix", ## +min + loess & N(0,1) normalised
+                       raw = "matrix", ## + min + log
                        cellNeighbours = "list",
                        nn.ids = "list",
                        size = "numeric",
@@ -344,6 +345,33 @@ setMethod("channelPlot", signature("SPData", "numeric"),
                   theme_bw() + theme(axis.text.x = element_text(angle=90, hjust=1))
           })
 
+#' Correlation plot of channels within the sample
+#'
+#' @export
+channelCorr <- function(sp, cell.class=NULL) {
+    library(corrplot)
+    Y <- cells(sp)
+    if(!is.null(cell.class)) {
+        Y <- Y[cellClass(sp) == cell.class,]
+    }
+    corr.y <- cor(Y)
+    corrplot(corr.y)
+}
+
+#' Correlation plot of channels with neighbours
+#'
+#' @export
+neighbourCorr <- function(sp, cell.class=NULL) {
+    library(corrplot)
+    Y <- cells(sp) ; X <- neighbourMean(sp, TRUE, TRUE)
+    if(!is.null(cell.class)) {
+        Y <- Y[cellClass(sp) == cell.class,]
+        X <- X[cellClass(sp) == cell.class,]
+    }
+    xy.corr <- cor(X,Y)
+    corrplot(xy.corr)
+}
+
 
 #######################################
 ## Methods for importing from matlab ##
@@ -354,7 +382,9 @@ setMethod("channelPlot", signature("SPData", "numeric"),
 #' Loads an Xell matlab file into the SPData format
 #'
 #' This function parses the matlab files, pulling out relevant proteins
-#' in the 'D' channel and validates that the correct proteins are present.
+#' in the 'D' channel and validates that the correct proteins are present. Matlab
+#' files can be found at
+#' https://s3.amazonaws.com/supplemental.cytobank.org/report_data/report_113/Figure_5/Figure_5_raw_image_files.zip
 #'
 #' @param filename The matlab file
 #' @param control.isotopes The isotopes used for control to exclude from analysis
@@ -364,54 +394,39 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
                         rescale.data=FALSE, scale.factor=10000) {
     library(R.matlab)
 
-
     ## loads relevant data from matlab and parses into list
 
     m <- readMat(filename)
 
     n.cells <- dim(m$Xell)[1]
-    n.proteins <- -1
+    n.channels <- -1
 
-    ## xcolheads shows the data has the structure of a time cell, then three cells
-    ## for each protein (here we use the D channel). The first two and last measurement
-    ## are control isotopes, which we disregard.
-    xcolheads <- as.character(m$Xell.nearest.col)
-
-    xp.id <- grep(")D",xcolheads) ## x protein ids
-
-    ## remove control isotopes
-    xp.id <- setdiff(xp.id, grep(paste(control.isotopes, collapse="|"),xcolheads))
-    xchannelNames <- xcolheads[xp.id]
-    n.proteins <- length(xchannelNames)
-
-    ## now get cell-by-cell protein data
 
     ycolheads <- as.character(m$Xell.list.col)
     yp.id <- grep(")D", ycolheads)
     yp.id <- setdiff(yp.id, grep(paste(control.isotopes, collapse="|"),ycolheads))
     ychannelNames <- ycolheads[yp.id]
 
-    if(!all.equal(ychannelNames,xchannelNames)) {
-        stop("Mismatch in X and Y protein names")
-    }
     channelNames <- xchannelNames
 
     Y <- m$Xell.list
     Y <- Y[,yp.id]
 
+    colnames(Y) <- channelNames
 
-    get.nn.count <- function(x,p.id) {
-        ## returns the nearest neighbour count for proteins
-        if(dim(x)[1] == 1) return(x[p.id])
-        x <- x[,p.id]
-        x
-    }
+    ## add minimum to make all values positive
+    Y <- preprocess.addmin(Y)
 
-    ## get nearest count data for ind
-    nn.count <- m$Xell.nearest
+    ## fork off 'raw' that this point
+    raw <- log(Y)
 
-    X <- lapply(nn.count, get.nn.count, xp.id)
+    ## want to LOESS normalise against cell size
+    sizes <- as.numeric(m$Xell.size)
+    Y <- loessNormalise(Y, sizes)
 
+
+    ## now on to constructing X, the nearest neighbour matrix
+    ## nnids list of nearest neighbour IDs
     nnids <- lapply(m$Xell.nearest, function(xl) {
         if(is.matrix(xl)) {
             return ( xl[,1] )
@@ -420,34 +435,29 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
         }
     })
 
-    sp <- SPData(channelNames=channelNames,
-                 readouts=Y, cellNeighbours=X,
-                 size=as.numeric(m$Xell.size),id=id,
-                 nn.ids=nnids)
-    sp <- preprocess(sp, rescale.data, scale.factor)
-    return( sp )
-}
-
-preprocess <- function(sp, scale.data=FALSE, scale.factor=10000) {
-    Y <- cells(sp)
-    X <- readouts(sp)
-
-    mu.bg <- -min(Y)
-
-    print("Adding -background")
-    Y <- log(Y + mu.bg + 1)
-
-    X <- lapply(X, function(x) {
-        x + mu.bg + 1
+    X <- lapply(nnids, function(id) {
+        Y[id,]
     })
 
-    if(scale.data) {
-        print("Rescaling data...")
-        Y <- Y / scale.factor
-        X <- lapply(X, function(x) x / scale.factor )
-    }
+    Y <- preprocess.centre(Y) # don't want to centre Y until after finding X
 
-    cells(sp) <- Y ; neighbours(sp) <- X
-
+    sp <- SPData(channelNames=channelNames,
+                 readouts=Y, raw=raw, cellNeighbours=X,
+                 size=sizes,id=id,
+                 nn.ids=nnids)
     return( sp )
 }
+
+preprocess.addmin <- function(Y) {
+    mu.bg <- -min(Y)
+    Y <- Y + mu.bg + 1
+}
+
+## converts the measurements for each channel
+## to N(0,1)
+preprocess.centre <- function(Y) {
+    Y <- apply(Y, 2, function(y) (y - mean(y)) / sd(y))
+    Y
+}
+
+
