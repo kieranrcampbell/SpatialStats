@@ -11,8 +11,8 @@ SPExp <- setClass("SPExp",
 setMethod("show", "SPExp", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
     cat(" Location: ", getDir(object), "\n", sep= "")
-    cat( " ", "With ", length(files(object)), " samples \n", sep="")
-    cat(" ", files(object), "\n", sep=" \n")
+    cat( " ", "With ", length(SPlist(object)), " samples \n", sep="")
+    cat(" ", ids(object), "\n", sep=" \n")
     invisible(NULL)
 })
 

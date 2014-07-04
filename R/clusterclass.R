@@ -26,3 +26,28 @@ clusterClass <- function(Y, doPCA = TRUE, nclass=2) {
     ret <- emcluster(d, emobj, assign.class = TRUE)
     ret$class
 }
+
+#' Given a 2 class sample, findTumourClass returns one of the indices
+#' (1 or 2) depending on which has the higher overall keratin concentration
+#'
+#' @param sp An SPData object
+#'
+#' @export
+findTumourID <- function(sp) {
+    Y <- cells(sp)
+
+    keratin.index <- grep("Keratin", channels(sp))
+    Yk <- Y[,keratin.index]
+
+    if(length(keratin.index) == 0) stop("Keratin not found in channels!")
+    if(length(keratin.index) > 1) stop("More than 1 keratin sample found!")
+
+    cl1 <- which(cellClass(sp) == 1)
+    cl2 <- which(cellClass(sp) == 2)
+
+    meanCl1 <- mean(Yk[cl1])
+    meanCl2 <- mean(Yk[cl2])
+
+
+    which.max(c(meanCl1, meanCl2))
+}
