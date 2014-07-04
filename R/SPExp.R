@@ -27,13 +27,14 @@ setMethod("getDir", "SPExp", function(object) object@dir)
 
 #' @export
 setMethod("initialize", "SPExp",
-          function(.Object, edir) {
-              .Object@dir <- edir
-              .Object@files <- dir(edir)
-              .Object@spdata <- list()
+          function(.Object, dir, files, spdata, ids) {
+              .Object@dir <- dir
+              .Object@files <- files
+              .Object@spdata <- spdata
+              .Object@ids <- ids
 
-              s <- strsplit(files(.Object),"_ID")
-              .Object@ids <- as.numeric(sapply(s, function(x) strsplit(x[2],"_")[[1]][1]))
+              #s <- strsplit(files(.Object),"_ID")
+              #.Object@ids <- as.numeric(sapply(s, function(x) strsplit(x[2],"_")[[1]][1]))
 
               return(.Object)
           })
@@ -82,6 +83,6 @@ setMethod("SPlist", "SPExp",
           function(object) object@spdata)
 
 #' @export
-SPExperiment <- function(directory) {
-    return ( new("SPExp", edir=directory) )
+SPExperiment <- function(dir, files, spdata, ids) {
+    return ( new("SPExp", dir, files, spdata, ids) )
 }
