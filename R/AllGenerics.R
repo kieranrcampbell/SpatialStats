@@ -7,6 +7,8 @@
 
 setGeneric("cells", function(object) standardGeneric("cells"))
 
+setGeneric("rawData", function(object) standardGeneric("rawData"))
+
 setGeneric("nCells", function(object) standardGeneric("nCells"))
 
 setGeneric("nChannel", function(object) standardGeneric("nChannel"))

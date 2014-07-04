@@ -4,6 +4,8 @@
 % between the two cells
 % kieranrcampbell@gmail.com
 
+
+
 function[RelBoundarySize] = get_boundary_size(PixelBoundaryList, Xell_nearest)
 RelBoundarySize = cell(size(PixelBoundaryList));
 
@@ -21,3 +23,6 @@ for i = 1:length(PixelBoundaryList)
 end
 
 end
+
+
+

@@ -20,6 +20,10 @@ SPData <- setClass("SPData",
 #' @export
 setMethod("cells", "SPData", function(object) object@readouts )
 
+#' Extract the raw (logged) data
+#' @export
+setMethod("rawData", "SPData", function(object) object@raw)
+
 #' Returns the number of cells in the sample
 #' @export
 setMethod("nCells", "SPData", function(object) dim(object@readouts)[1] )
@@ -84,6 +88,7 @@ setMethod("neighbourIDs", "SPData", function(object) object@nn.ids)
 #' @export
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
+    if(id(object) > -1) cat(" Sample ID: ", id(object), "\n", sep="")
     cat(" ", nCells(object), " cells with ", nChannel(object), " channel(s)\n", sep="")
     invisible(NULL)
 
@@ -97,6 +102,13 @@ setValidity("SPData", function(object) {
         print(nCells(object))
         valid <- FALSE
         msg <- c(msg, "Nearest neighbour data not available for all cells")
+    }
+
+    if(length(weight(object)) > 0 ) { ## okay for object not to have weights
+        if(length(weight(object)) != nCells(object)) {
+            valid <- FALSE
+            msg <- c(msg, "Number of weights and number of cells differ")
+        }
     }
 
     if(nCells(object) != dim(cells(object))[1]) {
@@ -208,7 +220,7 @@ setMethod("neighbourMean", signature("SPData", "logical", "logical"),
 
               if(normalise) X <- apply(X, 2, function(x) (x - mean(x))/sd(x))
 
-              colnames(X) <- channels(sp)
+              colnames(X) <- channels(object)
               X
           })
 
@@ -331,12 +343,12 @@ setMethod("boxplots", signature("SPData", "numeric", "numeric"),
 #' @export
 setMethod("channelPlot", signature("SPData", "numeric"),
           function(object, channel.ids) {
-              library(ggplot2)
-              library(reshape)
+              require(ggplot2)
+              require(reshape)
               readouts <- cells(object)
               classes <- as.factor(cellClass(object))
               readouts <- readouts[,channel.ids]
-              colnames(readouts) <- channels(sp)[channel.ids]
+              colnames(readouts) <- channels(object)[channel.ids]
               readouts.melted <- melt(readouts)
               plotdf <- data.frame(exprs=readouts.melted$value,
                                    channel=readouts.melted$X2,
@@ -349,7 +361,7 @@ setMethod("channelPlot", signature("SPData", "numeric"),
 #'
 #' @export
 channelCorr <- function(sp, cell.class=NULL) {
-    library(corrplot)
+    require(corrplot)
     Y <- cells(sp)
     if(!is.null(cell.class)) {
         Y <- Y[cellClass(sp) == cell.class,]
@@ -362,7 +374,7 @@ channelCorr <- function(sp, cell.class=NULL) {
 #'
 #' @export
 neighbourCorr <- function(sp, cell.class=NULL) {
-    library(corrplot)
+    require(corrplot)
     Y <- cells(sp) ; X <- neighbourMean(sp, TRUE, TRUE)
     if(!is.null(cell.class)) {
         Y <- Y[cellClass(sp) == cell.class,]
@@ -392,7 +404,7 @@ neighbourCorr <- function(sp, cell.class=NULL) {
 #' @export
 loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir193"),
                         rescale.data=FALSE, scale.factor=10000) {
-    library(R.matlab)
+    require(R.matlab)
 
     ## loads relevant data from matlab and parses into list
 
@@ -405,9 +417,7 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
     ycolheads <- as.character(m$Xell.list.col)
     yp.id <- grep(")D", ycolheads)
     yp.id <- setdiff(yp.id, grep(paste(control.isotopes, collapse="|"),ycolheads))
-    ychannelNames <- ycolheads[yp.id]
-
-    channelNames <- xchannelNames
+    channelNames <- ycolheads[yp.id]
 
     Y <- m$Xell.list
     Y <- Y[,yp.id]

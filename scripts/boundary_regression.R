@@ -4,24 +4,24 @@ library(rgl)
 library(R.matlab)
 library(gplots)
 
-load_all("..")
+## load_all("..")
 
-#load("~/ebi/sp/data/sp5.RData")
+## #load("~/ebi/sp/data/sp5.RData")
 
 
-clust <- cellClass(sp)
+## clust <- cellClass(sp)
 
-cl1 <- which(clust == 1)
-cl2 <- which(clust == 2)
+## cl1 <- which(clust == 1)
+## cl2 <- which(clust == 2)
 
-Y <- cells(sp)
+## Y <- cells(sp)
 
-## find out which is tumour and which is stromal
-kerindex <- grep("Keratin",channels(sp))
-kerReads <- Y[,kerindex]
-tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
+## ## find out which is tumour and which is stromal
+## kerindex <- grep("Keratin",channels(sp))
+## kerReads <- Y[,kerindex]
+## tumourID <- which.max( c(mean(kerReads[cl1]), mean(kerReads[cl2])))
 
-boundary <- NULL
+## boundary <- NULL
 
 
 doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
@@ -62,9 +62,9 @@ doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
 
     responseNames <- c("Cadherin",
                        "bcat",
-                       "Vimentin",
+                       "c-myc",
                        "CD44","Twist",
-                       "Slug", "NFkB",
+                       "Slug",
                        "EGFR")
 
     responseSubset <- getProteinIds(protein.names, responseNames)
@@ -100,7 +100,7 @@ doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
         fit <- lm(y ~ x)
         suma <- summary(fit)
 
-        for(i in 1:8) {
+        for(i in 1:length(responseNames)) {
             co <- suma[[i]]$coefficients
             co <- co[-1,4]
             co <- as.numeric(co < alpha)
@@ -140,9 +140,9 @@ plsr <- function(sp, tumourID=NULL, useWeights=TRUE) {
 
     responseNames <- c("Cadherin",
                        "bcat",
-                       "Vimentin",
+                       "c-myc",
                        "CD44","Twist",
-                       "Slug", "NFkB",
+                       "Slug",
                        "EGFR")
 
     responseSubset <- getProteinIds(protein.names, responseNames)
