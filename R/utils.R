@@ -18,7 +18,6 @@ findDisjointCellSet <- function(sp) {
         listofSets[[ counter ]] <- disSet
         counter <- counter + 1 ;
         x <- setdiff(allCells, unlist(listofSets))
-        print(x)
     }
 
     return(listofSets)

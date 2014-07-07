@@ -157,9 +157,13 @@ setMethod("[", "SPData", function(x, i, j) {
 
     .n.proteins <- length(j)
     .channelNames <- channels(x)[j]
-    .Y <- NULL
+    .id <- id(x)
+    .weight <- weight(x)[i]
+    .nnid <- neighbourIDs(x)[i]
+    .cell.class <- cellClass(x)[i]
 
     .Y <- as.matrix(cells(x)[i,j])
+    .raw <- as.matrix(rawData(x)[i,j])
 
     .X <- lapply(neighbours(x), function(nn.cells) {
         if(is.matrix(nn.cells)) nn.cells[,j] else t(as.matrix(nn.cells[j]))
@@ -172,7 +176,9 @@ setMethod("[", "SPData", function(x, i, j) {
     SPData(channelNames = .channelNames,
            readouts = .Y,
            cellNeighbours = .X,
-           size = .size)
+           size = .size, id=.id,
+           weights = .weight, nn.ids = .nnid,
+           raw = .raw, cellClass = .cell.class)
 })
 
 
