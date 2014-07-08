@@ -9,9 +9,27 @@
 #'
 #' @param Y Measurement by channel matrix
 #' @param s Vector of cell sizes
-loessNormalise <- function(Y, s) {
+loessNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
+    if(showPlot) {
+        plotLoess(Y, s, cell.class)
+    }
 
+    y <- lapply(1:2, function(i) Y[cell.classes == i,])
+    sizes <- lapply(1:2, function(i) s[cell.classes == i])
+
+
+    y.norm <- lapply(1:2, function(i) loessY(y[[i]], sizes[[i]]))
+
+    Y.n <- matrix(0, nrow=nrow(Y), ncol=ncol(Y))
+    Y.n[cell.classes == 1, ] <- y.norm[[1]]
+    Y.n[cell.classes == 2, ] <- y.norm[[2]]
+    colnames(Y.n) <- colnames(Y)
+    Y.n
+}
+
+loessY <- function(Y, s) {
     Y <- apply(Y, 2, function(y) {
+        ##print(c(length(y), length(s)))
         fit <- loess(y ~ s)
         ##j <- order(s)
         ##plot(fit)
@@ -21,6 +39,24 @@ loessNormalise <- function(Y, s) {
     Y
 }
 
+#' y & s are lists
+#'
+#'
+plotLoess <- function(Y, s, cell.class) {
+    y <- lapply(1:2, function(i) Y[cell.classes == i,])
+    sizes <- lapply(1:2, function(i) s[cell.classes == i])
+
+    z1 <- y[[1]] ; z2 <- y[[2]]
+    l1 <- loess(z1[,1] ~ sizes[[1]])
+    l2 <- loess(z2[,1] ~ sizes[[2]])
+
+    plot(s, Y[,1], col=cell.class, xlab="Cell size (px)", ylab="Log expr")
+    j1 <- order(sizes[[1]])
+    j2 <- order(sizes[[2]])
+    lines(sizes[[1]][j1], l1$fitted[j1],col="black")
+    lines(sizes[[2]][j2], l2$fitted[j2],col="red", cex=2)
+
+}
 
 totalProteinNormalise <- function(Y) {
     nchannels <- dim(Y)[2]

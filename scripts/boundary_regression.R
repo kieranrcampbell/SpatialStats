@@ -24,7 +24,7 @@ library(gplots)
 ## boundary <- NULL
 
 
-doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
+doLMTest <- function(sp,tumourID=NULL,alpha=0.01, useWeights=TRUE) {
     #source("parse-nn.R")
     set.seed(31)
 
@@ -37,7 +37,7 @@ doLMTest <- function(sp,tumourID=NULL,alpha=0.05, useWeights=TRUE) {
     ## regressing only on phosphates, so
     phInd <- c(3,4,13,14,15,17,18,27)
     phNames <- channels(sp)[phInd]
-    print(phNames)
+    #print(phNames)
 
     Y <- cells(sp)
     X <- neighbourMean(sp, useWeights, TRUE)

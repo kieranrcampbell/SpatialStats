@@ -34,7 +34,7 @@ clusterClass <- function(Y, doPCA = TRUE, nclass=2) {
 #'
 #' @export
 findTumourID <- function(sp) {
-    Y <- cells(sp)
+    Y <- rawData(sp)
 
     keratin.index <- grep("Keratin", channels(sp))
     Yk <- Y[,keratin.index]

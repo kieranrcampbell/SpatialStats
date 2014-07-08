@@ -438,8 +438,8 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
 
     ## want to LOESS normalise against cell size
     sizes <- as.numeric(m$Xell.size)
-    Y <- loessNormalise(Y, sizes)
-    Y <- totalProteinNormalise(Y)
+    ##Y <- loessNormalise(Y, sizes)
+    ##Y <- totalProteinNormalise(Y)
 
 
     ## now on to constructing X, the nearest neighbour matrix
@@ -452,17 +452,33 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
         }
     })
 
-    X <- lapply(nnids, function(id) {
-        Y[id,]
-    })
 
-    Y <- preprocess.centre(Y) # don't want to centre Y until after finding X
+    ## Y <- preprocess.centre(Y) # don't want to centre Y until after finding X
 
     sp <- SPData(channelNames=channelNames,
-                 readouts=Y, raw=raw, cellNeighbours=X,
+                 readouts=NULL, raw=raw, cellNeighbours=NULL,
                  size=sizes,id=id,
                  nn.ids=nnids)
     return( sp )
+}
+
+#' Data normalisation after classification
+#'
+#' @export
+normaliseSP <- function(sp) {
+    raw <- exp(rawData(sp))
+    Y <- loessNormalise(raw, size(sp), cellClass(sp), TRUE)
+    Y <- totalProteinNormalise(Y)
+    Y <- preprocess.centre(Y)
+
+    X <- lapply(neighbourIDs(sp), function(id) {
+        Y[id,]
+    })
+
+    sp@readouts <- Y
+    sp@cellNeighbours <- X
+
+    sp
 }
 
 preprocess.addmin <- function(Y) {
