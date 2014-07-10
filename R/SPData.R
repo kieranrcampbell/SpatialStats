@@ -58,6 +58,17 @@ setMethod("size", "SPData", function(object) object@size)
 #' @export
 setMethod("weight", "SPData", function(object) object@weights)
 
+#' Sets the boundary weights
+#'
+#' @name weight<-
+#' @export
+setReplaceMethod("weight", signature="SPData",
+                 function(object, value) {
+                     object@weights <- value
+                     return(object)
+                 })
+
+
 #' Gives dimension of underlying matrix representation
 #'
 #' Returns number of cells and number of proteins as dimension of
@@ -408,8 +419,7 @@ neighbourCorr <- function(sp, cell.class=NULL) {
 #' @param control.isotopes The isotopes used for control to exclude from analysis
 #' @param log.data Boolean of whether to log the data
 #' @export
-loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir193"),
-                        rescale.data=FALSE, scale.factor=10000) {
+loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir193")) {
     require(R.matlab)
 
     ## loads relevant data from matlab and parses into list
@@ -434,7 +444,7 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
     Y <- preprocess.addmin(Y)
 
     ## fork off 'raw' that this point
-    raw <- log(Y)
+    raw <- Y # log(Y)
 
     ## want to LOESS normalise against cell size
     sizes <- as.numeric(m$Xell.size)
@@ -456,29 +466,10 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
     ## Y <- preprocess.centre(Y) # don't want to centre Y until after finding X
 
     sp <- SPData(channelNames=channelNames,
-                 readouts=NULL, raw=raw, cellNeighbours=NULL,
+                 readouts=matrix(0), raw=raw, cellNeighbours=list(0),
                  size=sizes,id=id,
                  nn.ids=nnids)
     return( sp )
-}
-
-#' Data normalisation after classification
-#'
-#' @export
-normaliseSP <- function(sp) {
-    raw <- exp(rawData(sp))
-    Y <- loessNormalise(raw, size(sp), cellClass(sp), TRUE)
-    Y <- totalProteinNormalise(Y)
-    Y <- preprocess.centre(Y)
-
-    X <- lapply(neighbourIDs(sp), function(id) {
-        Y[id,]
-    })
-
-    sp@readouts <- Y
-    sp@cellNeighbours <- X
-
-    sp
 }
 
 preprocess.addmin <- function(Y) {

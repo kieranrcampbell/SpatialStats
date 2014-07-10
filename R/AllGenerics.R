@@ -33,6 +33,8 @@ setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
 
 setGeneric("weight", function(object) standardGeneric("weight"))
 
+setGeneric("weight<-", function(object, value) standardGeneric("weight<-"))
+
 ########################
 ## Plotting functions ##
 ########################

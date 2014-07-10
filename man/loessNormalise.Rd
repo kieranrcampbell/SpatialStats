@@ -3,7 +3,7 @@
 \title{Provides column by column normalisation on Y
 given cell size s}
 \usage{
-loessNormalise(Y, s)
+loessNormalise(Y, s, cell.classes, showPlot = FALSE)
 }
 \arguments{
   \item{Y}{Measurement by channel matrix}

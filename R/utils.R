@@ -51,12 +51,14 @@ VIF <- function(X) {
     ## returns the vif coefficients without need for the
     ## entire model
     k <- dim(X)[2]
-    sapply(1:k, function(i) {
+    vifs <- sapply(1:k, function(i) {
         y <- X[,i] ; x <- X[,-i]
         fit <- lm(y ~ x)
         r <- summary(fit)$r.squared
         1/(1-r)
     })
+    names(vifs) <- colnames(X)
+    vifs
 }
 
 #' Takes a matrix of predictors and sequentially removes them until the largest
@@ -67,6 +69,7 @@ VIF <- function(X) {
 #'
 #' @export
 VIFRemove <- function(X, vif.threshold=10) {
+    vif.class <- list()
     x <- X
     while(TRUE) {
         v <- VIF(x)
@@ -78,3 +81,40 @@ VIFRemove <- function(X, vif.threshold=10) {
         }
     }
 }
+
+
+#' Remove predictors based on correlation, and keep a list
+#' of groupings
+#'
+#' @export
+corrRemove <- function(X, threshold = 0.5) {
+    xcor <- cor(X)
+    channel.names <- colnames(X)
+
+    diag(xcor) <- 0 # don't want to remove self interactions
+
+    toRemove <- NULL
+
+    pathwayList <- list()
+
+    while(TRUE) {
+        if(max(xcor) > threshold) {
+            cn <- colnames(xcor)
+            maxloc <- which(xcor == max(xcor), arr.ind=TRUE)[1,] ## find position of maximum
+            meanCorr1 <- mean(xcor[maxloc[1],])
+            meanCorr2 <- mean(xcor[maxloc[2],])
+            r <- maxloc[which.max(c(meanCorr1,meanCorr2))]
+
+            ## pathway stuff
+            q <- maxloc[which.min(c(meanCorr1,meanCorr2))]
+            pathwayList[[ cn[q] ]] <- cn[r]
+
+            names(r) <- NULL
+            toRemove <- c(toRemove,which(channel.names %in% rownames(xcor)[r] ))
+            xcor <- xcor[-r,-r]
+        } else {
+            return(list(toRemove=toRemove,pathways=pathwayList))
+        }
+    }
+}
+

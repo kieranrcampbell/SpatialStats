@@ -3,7 +3,7 @@
 \title{Loads an Xell matlab file into the SPData format}
 \usage{
 loadCells(filename, id = -1, control.isotopes = c("Xe131", "Cs133",
-  "Ir193"), rescale.data = FALSE, scale.factor = 10000)
+  "Ir193"))
 }
 \arguments{
   \item{filename}{The matlab file}

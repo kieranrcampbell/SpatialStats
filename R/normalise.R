@@ -4,6 +4,28 @@
 ## kieranrcampbell@gmail.com                              ##
 ############################################################
 
+
+
+#' Data normalisation after classification
+#'
+#' @export
+normaliseSP <- function(sp) {
+    raw <- rawData(sp)
+    Y <- loessNormalise(raw, size(sp), cellClass(sp), TRUE)
+    Y <- totalProteinNormalise(Y)
+    Y <- preprocess.centre(Y)
+
+    X <- lapply(neighbourIDs(sp), function(id) {
+        Y[id,]
+    })
+
+    sp@readouts <- Y
+    sp@cellNeighbours <- X
+
+    sp
+}
+
+
 #' Provides column by column normalisation on Y
 #' given cell size s
 #'
@@ -11,7 +33,7 @@
 #' @param s Vector of cell sizes
 loessNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
     if(showPlot) {
-        plotLoess(Y, s, cell.class)
+        plotLoess(Y, s, cell.classes)
     }
 
     y <- lapply(1:2, function(i) Y[cell.classes == i,])
@@ -42,7 +64,7 @@ loessY <- function(Y, s) {
 #' y & s are lists
 #'
 #'
-plotLoess <- function(Y, s, cell.class) {
+plotLoess <- function(Y, s, cell.classes) {
     y <- lapply(1:2, function(i) Y[cell.classes == i,])
     sizes <- lapply(1:2, function(i) s[cell.classes == i])
 
@@ -50,7 +72,7 @@ plotLoess <- function(Y, s, cell.class) {
     l1 <- loess(z1[,1] ~ sizes[[1]])
     l2 <- loess(z2[,1] ~ sizes[[2]])
 
-    plot(s, Y[,1], col=cell.class, xlab="Cell size (px)", ylab="Log expr")
+    plot(s, Y[,1], col=cell.classes, xlab="Cell size (px)", ylab="Log expr")
     j1 <- order(sizes[[1]])
     j2 <- order(sizes[[2]])
     lines(sizes[[1]][j1], l1$fitted[j1],col="black")
@@ -70,22 +92,3 @@ totalProteinNormalise <- function(Y) {
     new.Y
 }
 
-
-## ## crap script
-
-## pdf("../img/corrplots_after_loess.pdf",width=8, height=8)
-
-## load("../data/sp5.RData")
-## sp5 <- sp
-## load("../data/sp6.RData")
-## sp6 <- sp
-
-## sp5@readouts <- loessNormalise(sp5)
-## sp6@readouts <- loessNormalise(sp6)
-
-## channelCorr(sp5, 2)
-## channelCorr(sp5, 1)
-## channelCorr(sp6, 1)
-## channelCorr(sp6, 2)
-
-## dev.off()
