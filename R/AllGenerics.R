@@ -71,4 +71,4 @@ setGeneric("loadExp", function(object) standardGeneric("loadExp"))
 
 setGeneric("SPlist", function(object) standardGeneric("SPlist"))
 
-setGeneric("ids", function(object) standardGeneric("ids"))
+setGeneric("IDs", function(object) standardGeneric("IDs"))

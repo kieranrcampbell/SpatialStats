@@ -42,7 +42,7 @@ setMethod("initialize", "SPExp",
 #' Returns the sample ids.
 #'
 #' @export
-setMethod("ids", "SPExp",
+setMethod("IDs", "SPExp",
           function(object) object@ids)
 
 #' Loads in the experiment data

@@ -4,7 +4,6 @@
 ## kieranrcampbell@gmail.com                                              ##
 ############################################################################
 
-doReg <- function() {
 library(devtools)
 ##load_all("..")
 
@@ -46,17 +45,7 @@ x <- VIFRemove(x, vif.threshold=2)
 
 cell.sizes <- sapply(XY, function(xy) dim(xy$Y)[1])
 
-ids <- ids(SPE[1:nsamp])
-sample.factors <- lapply(1:nsamp, function(i) rep(ids[i], cell.sizes[i]))
-sample.factors <- as.factor(unlist(sample.factors))
-
-fit <- lm(y ~ x + sample.factors)
-
-## time for some significance testing
-alpha <- 0.05
-m <- ncol(x) * ncol(y)
-print(sprintf("Adjusted p-value: %f", alpha/m))
-
+aids <- IDR
 s <- summary(fit)
 
 nrep <- ncol(y) ; npred <- ncol(x)
@@ -82,4 +71,3 @@ a[1:npred, (npred+1):z] <- A
 g <- graph.adjacency(a, mode="directed")
 plot(g)
 
-}
