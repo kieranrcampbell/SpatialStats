@@ -1,5 +1,8 @@
-## spatialpro R class
-## kieranrcampbell@gmail.com
+################################################
+## spatialpro R class                         ##
+## Data container for spatial proteomics data ##
+## kieran.campbell@sjc.ox.ac.uk               ##
+################################################
 
 #' Class containing spatial proteomics data
 #'

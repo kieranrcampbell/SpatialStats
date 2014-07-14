@@ -1,13 +1,15 @@
 
 ############################################################################
 ## Combines four sample regression then applies a linear model across all ##
-## kieranrcampbell@gmail.com                                              ##
+## kieran.campbell@sjc.ox.ac.uk                                           ##
 ############################################################################
 
 library(devtools)
 ##load_all("..")
 
-load("../data/SPE.Rd")
+load("../data/SPE_bad.Rd")
+##SPE <- SPE[c(1,3,4)]
+SPE <- SPE_bad
 
 ## phInd for phosphates
 ## repInd for response variables
@@ -16,6 +18,8 @@ load("../../usefulin.Rd")
 nsamp <- 4
 
 phNames <- channels(SPE[[1]])[phInd]
+
+ampkInd <- c(13,14)
 
 ## variable selection
 XY <- lapply(1:nsamp, function(i) {
@@ -26,8 +30,8 @@ XY <- lapply(1:nsamp, function(i) {
     Y <- cells(sp)
     X <- neighbourMean(sp, FALSE, TRUE)
 
-    Y <- Y[tumourCells, repInd]
-    X <- X[tumourCells, phInd]
+    Y <- Y[tumourCells, ]
+    X <- X[tumourCells,]
 
     list(X=X,Y=Y)
 })
@@ -45,7 +49,22 @@ x <- VIFRemove(x, vif.threshold=2)
 
 cell.sizes <- sapply(XY, function(xy) dim(xy$Y)[1])
 
-aids <- IDR
+aids <- IDs(SPE[1:nsamp])
+sample.factors <- lapply(1:nsamp, function(i) rep(aids[i], cell.sizes[i]))
+sample.factors <- as.factor(unlist(sample.factors))
+
+## standardize across variables
+standardize <- function(x) (x - mean(x)) / sd(x)
+y <- apply(y, 2, standardize)
+x <- apply(x, 2, standardize)
+
+fit <- lm(y ~ x + sample.factors)
+
+## time for some significance testing
+alpha <- 0.05
+m <- ncol(x) * ncol(y)
+print(sprintf("Adjusted p-value: %f", alpha/m))
+
 s <- summary(fit)
 
 nrep <- ncol(y) ; npred <- ncol(x)
@@ -56,7 +75,8 @@ for(i in 1:nrep) {
     ## looking at which proteins influence i
     coeff <- s[[i]]$coefficients
     p.vals <- as.numeric(coeff[,4])
-    p.vals <- p.vals[-c(1,npred+1, npred+2, npred+3)] # remove intercept consideration & sample effects
+    sample.coeff <- (npred+2):(npred + nsamp)
+    p.vals <- p.vals[-c(1,sample.coeff)] # remove intercept consideration & sample effects
     A[,i] <- as.numeric(p.vals < alpha/m)
 }
 

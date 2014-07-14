@@ -1,7 +1,7 @@
 
 ############################################################
 ## LOESS based normalisation for signal against cell size ##
-## kieranrcampbell@gmail.com                              ##
+## kieran.campbell@sjc.ox.ac.uk                           ##
 ############################################################
 
 

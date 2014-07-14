@@ -1,8 +1,8 @@
 Package: SpatialPRo
-Title: Containers for spacial proteomics data
+Title: Containers and methods for spacial proteomics data
 Description: First attempt at package
 Version: 0.1
-Author: Kieran Campbell (kieranrcampbell@gmail.com)
+Author: Kieran Campbell (kieran.campbell@sjc.ox.ac.uk)
 Depends:
     R (>= 3.0.2)
 Imports:

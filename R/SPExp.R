@@ -12,7 +12,7 @@ setMethod("show", "SPExp", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
     cat(" Location: ", getDir(object), "\n", sep= "")
     cat( " ", "With ", length(SPlist(object)), " samples \n", sep="")
-    cat(" ", ids(object), "\n", sep=" \n")
+    cat(" ", IDs(object), "\n", sep=" \n")
     invisible(NULL)
 })
 
@@ -56,7 +56,7 @@ setMethod("loadExp", "SPExp",
               for(i in 1:N) {
                   object@spdata[[ i ]] <- loadCells(paste(getDir(object),
                                                           files(object)[i],
-                                                          sep=""), id=ids(object)[i])
+                                                          sep=""), id=IDs(object)[i])
               }
 
               return(object)
