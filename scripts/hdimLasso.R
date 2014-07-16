@@ -16,9 +16,6 @@
 hdimLasso <- function(y,X, B=100, s="lambda.1se", gamma.min=0.05) {
     require(glmnet)
 
-    nPredict <- ncol(X)
-    colnames(p.vals) <- colnames(X)
-
     p.mat <- replicate(B, doSingleSplit(y,X,s) )
 
     adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
@@ -35,12 +32,19 @@ doSingleSplit <- function(y,X,s,alpha=0.05) {
     X.in <- X[sample.in,] ; X.out <- X[sample.out,]
 
     predictors <- doLasso(y.in, X.in,s)
+
+    print(paste("Using", length(predictors), "out of total", ncol(X), sep=" "))
+
     p.vals <- doLSReg(y.out, X.out, predictors, alpha)
     return(p.vals)
 }
 
 doLasso <- function(y,X,s) {
     cv.fit <- cv.glmnet(X,y)
+    if(s == "halfway") {
+        s = (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
+    }
+
     m <- coef(cv.fit, s=s)
 
     ## get names of predictors for which lasso returns non-zero
