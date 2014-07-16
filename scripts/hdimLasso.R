@@ -13,17 +13,19 @@
 #' @param B Number of times to partition the matrix
 #' @param s The value of lambda to use in lasso (normally use
 #' either "lambda.min" or "lambda.1se" as per glmnet package)
-hdimLasso <- function(y,X, B=100, s="lambda.1se", gamma.min=0.05) {
+hdimLasso <- function(y,X, B=100, s="lambda.1se", gamma.min=0.05, alpha=0.05) {
     require(glmnet)
 
-    p.mat <- replicate(B, doSingleSplit(y,X,s) )
+    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha) )
 
     adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
 
     return(adjusted.pvals)
 }
 
-doSingleSplit <- function(y,X,s,alpha=0.05) {
+#' Performs a single split of the data into floor(N/2) and N - floor(N/2)
+#' groups and performs lasso & LS estimation
+doSingleSplit <- function(y,X,s) {
     n.samp <- length(y)
     sample.in <- sample(1:n.samp, size = floor(n.samp / 2))
     sample.out <- setdiff(1:n.samp, sample.in)
@@ -39,6 +41,8 @@ doSingleSplit <- function(y,X,s,alpha=0.05) {
     return(p.vals)
 }
 
+#' Performs lasso on y & X, with custom option of s to be midway point between lambdamin
+#' and lambda within 1se
 doLasso <- function(y,X,s) {
     cv.fit <- cv.glmnet(X,y)
     if(s == "halfway") {
@@ -53,6 +57,8 @@ doLasso <- function(y,X,s) {
     return(predictors)
 }
 
+#' Performs standard least squares and returns
+#' p-values adjusted for multiple testing (bonferroni)
 doLSReg <- function(y, X, predictors, alpha) {
     ## magnitude of the prediction subset
     s.mag <- length(predictors)
@@ -80,13 +86,15 @@ doLSReg <- function(y, X, predictors, alpha) {
     pVec
 }
 
+#' Q(gamma) as defined in eq 2.2
 Q.gamma <- function(gamma, P) {
     q <- quantile(P / gamma, gamma)
     names(q) <- NULL
     q
 }
 
-
+#' Implements adaptive gamma search and returns the final P values with
+#' family-wise error correction (eq. 2.3)
 adaptiveP <- function(P, gamma.min) {
     if(gamma.min == 0) {
         stop("Gamma.min must be greater than 0: about to log it!")
