@@ -27,10 +27,12 @@ source("hdimLasso.R")
 load("../data/SPE_prim.Rd")
 load("../data/SPE.Rd")
 load("../data/SPE_bad.Rd")
-SPE <- SPE.bad
+##SPE <- SPE.bad
 
-SPE.all <- SPExperiment("None", "None", spdata=c(SPlist(SPE), SPlist(SPE.primaryl)[3]),
-                        ids = c(IDs(SPE), IDs(SPE.primaryl)[3]))
+SPE.all <- SPExperiment("None", "None", spdata=c(SPlist(SPE), SPlist(SPE.bad)),
+                        ids = c(IDs(SPE), IDs(SPE.bad)))
+
+SPE <- SPE.all
 
 ## variable selection
 XY <- lapply(SPlist(SPE), function(sp) {
@@ -78,6 +80,12 @@ for(i in 1:Nfactors) {
     tcol[ range ] <- 1
     factors <- cbind(factors, tcol)
 }
+
+## normalise Y & X to have mean 0 and unit variance
+m0uv <- function(x) (x - mean(x)) / sd(x)
+Y <- apply(Y, 2, m0uv)
+X <- apply(X, 2, m0uv)
+
 
 colnames(factors) <- paste("sample", IDs(SPE)[1:Nfactors], sep="")
 
@@ -132,9 +140,10 @@ ind <- c(2, 5, 8, 10, 11, 13, 15, 16, 17, 18, 22, 24,30)
 ## covTest(lar,X, Y[,k])
 
 all.ps <- apply(Y, 2, function(y) {
-    ps <- hdimLasso(y,X,B=50, s="usemin", minP=4)
-    as.numeric(ps < 0.05)
+    ps <- hdimLasso(y,X,B=50, s="lambda.min")
+    as.numeric(ps < 0.01)
 })
+which(all.ps == 1, arr.ind=TRUE)
 
 
 ## lars stuff
@@ -145,8 +154,10 @@ sig <- sapply(cvtests, function(cv) {
     cv <- cv$results
     pred.num <- abs(cv[,1])
     P <- cv[,3]
-    P <- p.adjust(P, method="BH")
+    ##P <- p.adjust(P, method="BH")
     retval <- rep(0, length(pred.num))
-    retval[pred.num] <-  as.numeric(P < 0.05)
+    retval[pred.num] <-  as.numeric(P < 0.01)
     retval
 })
+
+which(sig == 1, arr.ind=TRUE)

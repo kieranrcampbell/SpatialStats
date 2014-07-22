@@ -35,6 +35,10 @@ setGeneric("weight", function(object) standardGeneric("weight"))
 
 setGeneric("weight<-", function(object, value) standardGeneric("weight<-"))
 
+setGeneric("xy", function(object) standardGeneric("xy"))
+
+setGeneric("xy<-", function(object, value) standardGeneric("xy<-"))
+
 ########################
 ## Plotting functions ##
 ########################

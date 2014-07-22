@@ -11,9 +11,9 @@
 #' @export
 normaliseSP <- function(sp) {
     raw <- rawData(sp)
-    Y <- loessNormalise(raw, size(sp), cellClass(sp), TRUE)
+    Y <- loessNormalise(raw, size(sp), cellClass(sp), FALSE)
     Y <- totalProteinNormalise(Y)
-    Y <- preprocess.centre(Y)
+    Y <- preprocess.centre(Y, cellClass(sp))
 
     X <- lapply(neighbourIDs(sp), function(id) {
         Y[id,]
@@ -23,6 +23,22 @@ normaliseSP <- function(sp) {
     sp@cellNeighbours <- X
 
     sp
+}
+
+## converts the measurements for each channel
+## to N(0,1)
+## todo: come back and make for more than 2 classes
+preprocess.centre <- function(Y, cell.class) {
+    Y <- apply(Y, 2, function(y) {
+        y1 <- y[cell.class == 1]
+        y1 <- (y1 - mean(y1)) / sd(y1)
+        y2 <- y[cell.class == 2]
+        y2 <- (y2 - mean(y2)) / sd(y2)
+        y[cell.class == 1] <- y1
+        y[cell.class == 2] <- y2
+        y
+    })
+    Y
 }
 
 
@@ -80,6 +96,7 @@ plotLoess <- function(Y, s, cell.classes) {
 
 }
 
+#' Uses loess normalisation to normalise by cell concentration
 totalProteinNormalise <- function(Y) {
     nchannels <- dim(Y)[2]
     new.Y <- sapply(1:nchannels, function(i) {

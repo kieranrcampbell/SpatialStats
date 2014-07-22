@@ -13,10 +13,14 @@
 #' @param B Number of times to partition the matrix
 #' @param s The value of lambda to use in lasso (normally use
 #' either "lambda.min" or "lambda.1se" as per glmnet package)
-hdimLasso <- function(y,X, B=100, s="lambda.1se", gamma.min=0.05, alpha=0.05) {
+hdimLasso <- function(y,X, B=100, s=c("lambda.1se","lambda.min","halfway","usemin"),
+                                      gamma.min=0.05, alpha=0.05, minP=NULL) {
     require(glmnet)
 
-    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha) )
+    if(nrow(X) != length(y)) stop("Number of samples doesn't match")
+
+    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha, minP) )
+    mode(p.mat) <- "numeric" # weird
 
     adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
 
@@ -25,7 +29,7 @@ hdimLasso <- function(y,X, B=100, s="lambda.1se", gamma.min=0.05, alpha=0.05) {
 
 #' Performs a single split of the data into floor(N/2) and N - floor(N/2)
 #' groups and performs lasso & LS estimation
-doSingleSplit <- function(y,X,s) {
+doSingleSplit <- function(y,X,s,alpha, minP) {
     n.samp <- length(y)
     sample.in <- sample(1:n.samp, size = floor(n.samp / 2))
     sample.out <- setdiff(1:n.samp, sample.in)
@@ -33,9 +37,9 @@ doSingleSplit <- function(y,X,s) {
     y.in <- y[sample.in] ; y.out <- y[sample.out]
     X.in <- X[sample.in,] ; X.out <- X[sample.out,]
 
-    predictors <- doLasso(y.in, X.in,s)
+    predictors <- doLasso(y.in, X.in,s, minP)
 
-    print(paste("Using", length(predictors), "out of total", ncol(X), sep=" "))
+    ##print(paste("Using", length(predictors), "out of total", ncol(X), sep=" "))
 
     p.vals <- doLSReg(y.out, X.out, predictors, alpha)
     return(p.vals)
@@ -43,12 +47,19 @@ doSingleSplit <- function(y,X,s) {
 
 #' Performs lasso on y & X, with custom option of s to be midway point between lambdamin
 #' and lambda within 1se
-doLasso <- function(y,X,s) {
-    cv.fit <- cv.glmnet(X,y)
+doLasso <- function(y,X,s, minP = NULL) {
+    cv.fit <- cv.glmnet(X,y, standardize=FALSE)
     if(s == "halfway") {
-        s = (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
+        s <- (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
     }
 
+    if(s == "usemin") {
+        if(is.null(minP)) stop("Minimum predictors selected but minP is NULL")
+        fit <- cv.fit$glmnet.fit
+        df <- fit$df
+        lambda.loc <- max(which(df < minP))
+        s = fit$lambda[ lambda.loc ]
+    }
     m <- coef(cv.fit, s=s)
 
     ## get names of predictors for which lasso returns non-zero
@@ -78,7 +89,7 @@ doLSReg <- function(y, X, predictors, alpha) {
     p.signif <- co[-1,4][which.signif]
 
     ## adjust p-values for multiple testing
-    p.signif <- p.signif * nPredict
+    p.signif <- p.signif * s.mag
     p.signif <- sapply(p.signif, min, 1) # scale > 1 to 1
 
     pVec[ predictors[which.signif] ] <- p.signif
@@ -87,15 +98,23 @@ doLSReg <- function(y, X, predictors, alpha) {
 }
 
 #' Q(gamma) as defined in eq 2.2
-Q.gamma <- function(gamma, P) {
-    q <- quantile(P / gamma, gamma)
+Q.gamma <- function(gam, P) {
+    ##print(gam)
+    ##print(class(P))
+    q <- quantile(P / gam, gam)
     names(q) <- NULL
-    q
+    return(min(q,1))
 }
 
 #' Implements adaptive gamma search and returns the final P values with
 #' family-wise error correction (eq. 2.3)
 adaptiveP <- function(P, gamma.min) {
+    if(is.list(P)) {
+        msg <- "P is List! \n"
+        msg <- cat(msg, length(P))
+        msg <- cat(msg,I)
+        stop(msg)
+    }
     if(gamma.min == 0) {
         stop("Gamma.min must be greater than 0: about to log it!")
     }
@@ -106,3 +125,6 @@ adaptiveP <- function(P, gamma.min) {
 
     return( (1 - log(gamma.min) ) * inf.Q )
 }
+
+
+

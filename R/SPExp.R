@@ -82,7 +82,34 @@ setMethod("[[", "SPExp",
 setMethod("SPlist", "SPExp",
           function(object) object@spdata)
 
+#' Returns the number of samples
+#' @export
+setMethod("length", "SPExp", function(x) length(x@spdata))
+
 #' @export
 SPExperiment <- function(dir, files, spdata, ids) {
     return ( new("SPExp", dir, files, spdata, ids) )
+}
+
+#' Load an experiment from cytobank in matlab format
+#'
+#' @param directory The directory containing the experiment files
+#' @param files The filenames to load. Default is NULL, in which case all files
+#' in the directory are used
+#' @export
+SPExperimentfromDir <- function(directory, files=NULL) {
+    if(is.null(files)) files <- dir(directory)
+
+    filesToLoad <- paste(directory,files,sep="/")
+    ids <- sapply(filesToLoad, getIDfromTMAname)
+    names(ids) <- NULL
+    sps <- lapply(1:length(ids), function(i) { loadCells(filesToLoad[i], ids[i])})
+    return(SPExperiment(directory, files, sps, ids))
+}
+
+getIDfromTMAname <- function(str) {
+    splt1 <- strsplit(str, "_ID")[[1]]
+    splt2 <- strsplit(splt1[2],"_")[[1]]
+    id <- as.numeric(splt2[1])
+    id
 }

@@ -5,11 +5,11 @@
 ############################################################################
 
 library(devtools)
-##load_all("..")
+load_all("..")
 
-load("../data/SPE_bad.Rd")
+load("../data/SPE.Rd")
 ##SPE <- SPE[c(1,3,4)]
-SPE <- SPE_bad
+##SPE <- SPE_bad
 
 ## phInd for phosphates
 ## repInd for response variables
@@ -90,4 +90,27 @@ a[1:npred, (npred+1):z] <- A
 
 g <- graph.adjacency(a, mode="directed")
 plot(g)
+
+## plot all
+
+png("img/mse1.png", width=2000, height=1600)
+par(mfrow=c(4,8))
+
+for(i in 1:32) {
+    yi <- y[,i]
+    cv.fit <- cv.glmnet(x,yi)
+    plot(cv.fit, main=channels(sp)[i])
+
+}
+dev.off()
+
+
+## partial correlation stuff
+
+par(mfrow=c(4,8))
+
+for(i in 1:32) {
+    cvf <- cv.glmnet(y[,-i], y[,i])
+    plot(cvf, main=channels(sp))
+}
 

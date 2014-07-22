@@ -16,7 +16,7 @@ SPData <- setClass("SPData",
                        size = "numeric",
                        id = "numeric",
                        weights = "list",
-                       pos = "numeric", ## not yet implemented
+                       pos = "matrix", # nCell by 2 matrix of cell locations
                        cellClass = "numeric"))
 
 #' Extracts the cell proteomics data
@@ -99,6 +99,15 @@ setReplaceMethod("id", signature = "SPData",
 #' @export
 setMethod("neighbourIDs", "SPData", function(object) object@nn.ids)
 
+#' Returns the 2-D coordinates of the cell
+#'
+#' @export
+setMethod("xy", "SPData", function(object) object@pos)
+
+
+
+
+#' Default show call
 #' @export
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
@@ -116,6 +125,13 @@ setValidity("SPData", function(object) {
         print(nCells(object))
         valid <- FALSE
         msg <- c(msg, "Nearest neighbour data not available for all cells")
+    }
+
+    if(!is.null(xy(object))) {
+        if(nCells(object) != ncol(xy(object))) {
+            valid <- FALSE
+            msg <- c(msg, "Length mismatch between location info and number of cells")
+        }
     }
 
     if(length(weight(object)) > 0 ) { ## okay for object not to have weights
@@ -466,11 +482,9 @@ loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir1
     })
 
 
-    ## Y <- preprocess.centre(Y) # don't want to centre Y until after finding X
-
     sp <- SPData(channelNames=channelNames,
                  readouts=matrix(0), raw=raw, cellNeighbours=list(0),
-                 size=sizes,id=id,
+                 size=sizes,id=id, weights=list(0), pos=matrix(0), cellClass=-1,
                  nn.ids=nnids)
     return( sp )
 }
@@ -480,11 +494,5 @@ preprocess.addmin <- function(Y) {
     Y <- Y + mu.bg + 1
 }
 
-## converts the measurements for each channel
-## to N(0,1)
-preprocess.centre <- function(Y) {
-    Y <- apply(Y, 2, function(y) (y - mean(y)) / sd(y))
-    Y
-}
 
 

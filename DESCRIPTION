@@ -10,5 +10,6 @@ Imports:
     ggplot2,
     reshape,
     corrplot,
-    EMCluster
+    EMCluster,
+    glmnet
 License: MIT
