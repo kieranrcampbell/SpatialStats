@@ -29,7 +29,7 @@ setMethod("rawData", "SPData", function(object) object@raw)
 
 #' Returns the number of cells in the sample
 #' @export
-setMethod("nCells", "SPData", function(object) dim(object@readouts)[1] )
+setMethod("nCells", "SPData", function(object) dim(object@rawData)[1] )
 
 #' Returns the number of proteins measured (number of channels)
 #' @export
