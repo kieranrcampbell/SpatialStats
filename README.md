@@ -8,7 +8,7 @@ Using devtools call `install_github("kieranrcampbell/SpatialPRo")`
 
 There is an example dataset included - to load it first load the library via `library(SpatialPRo)` then call `data(sp5)`. This loads an example object of class `SPData` called `sp`. The following can then be used to access data elements:
 
-## Generic SPData methods
+#### Generic SPData methods
 * `channels(sp)` returns the channel names
 * `nChannel(sp)` returns the number of channels
 * `nCells(sp)` returns the number of cells
@@ -24,7 +24,7 @@ There is an example dataset included - to load it first load the library via `li
 * An sp object can be partitioned using the [ operator, so sp[1:2, c(3,5,7)] returns a new SPData object
 using cells 1 & 2 and channels 3, 5 and 7
 
-## Methods for dealing with different cell classes
+#### Methods for dealing with different cell classes
 * `cellClass(sp)` returns a vector of length nCells(sp) with a numeric classification for each cell (currently only 2 types are supported)
 * `neighbourClass(sp, cell.class)` functions similarly to cellClass but returns a list similar to neighbours(sp) but with only neighbours of class cell.class remaining
 * `neighbourChannel(sp, c(1,3,5)` returns the neighbour list as in neighbours(sp) but including only channels 1,3 and 5
