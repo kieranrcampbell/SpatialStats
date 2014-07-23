@@ -35,43 +35,37 @@ SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.
 
 SPE <- SPE.primary
 
-## variable selection
-XY <- lapply(SPlist(SPE), function(sp) {
-    tumourID <- findTumourID(sp)
-    tumourCells <- which(cellClass(sp) == tumourID)
+bindSPE <- function(SPE, pickTumour=TRUE) {
+    ## variable selection
+    XY <- lapply(SPlist(SPE), function(sp) {
+        if(pickTumour) {
+            tumourID <- findTumourID(sp)
+            tumourCells <- which(cellClass(sp) == tumourID)
+        }
 
-    Y <- cells(sp)
-    X <- neighbourMean(sp, FALSE, TRUE)
+        Y <- cells(sp)
+        X <- neighbourMean(sp, TRUE, TRUE)
 
-    Y <- Y[tumourCells, ]
-    X <- X[tumourCells, ]
-    ##print(colMeans(Y))
+        Y <- Y[tumourCells, ]
+        X <- X[tumourCells, ]
 
-    list(X=X,Y=Y)
-})
+        list(X=X,Y=Y)
+    })
+    sizes <- sapply(XY, function(xy) nrow(xy$Y))
 
-allRegress <- function(M) {
-    Y.new <- matrix(0, nrow=nrow(M), ncol=ncol(M))
-    for(i in 1:32) {
-        fit <- glmnet(M[,-i], M[,i])
-        cvf <- cv.glmnet(M[,-i], M[,i])
-        r <- M[,i] - predict(fit, newx=M[,-i],s=cvf$lambda.1se)
-        Y.new[,i] <- r
-    }
-    colnames(Y.new) <- colnames(M) ; rownames(Y.new) <- rownames(M)
-    return( Y.new )
+    all.x <- lapply(XY, function(xy) xy$X)
+    all.y <- lapply(XY, function(xy) xy$Y)
+
+    X <- do.call(rbind, all.x)
+    Y <- do.call(rbind, all.y)
+    return( list( X=X, Y=Y, sizes=sizes))
 }
 
+XY <- bindSPE(SPE)
+X <- XY$X
+Y <- XY$Y
 
-all.x <- lapply(XY, function(xy) xy$X)
-all.y <- lapply(XY, function(xy) xy$Y)
-
-X <- do.call(rbind, all.x)
-Y <- do.call(rbind, all.y)
-
-##Y.new <- allRegress(Y)
-
-cell.sizes <- sapply(XY, function(xy) dim(xy$Y)[1])
+cell.sizes <- XY$sizes
 Nfactors <- length(cell.sizes) - 1
 factors <- NULL
 for(i in 1:Nfactors) {
@@ -139,7 +133,7 @@ sig <- sapply(cvtests, function(cv) {
 which(sig == 1, arr.ind=TRUE)
 
 cn <- channels(SPE[[1]])
-
+stop("done")
 buildGraphfromSigMat <- function(mat, cnames) {
     require(igraph)
     diffRows <- which(mat[,1] != mat[,2])
@@ -169,3 +163,5 @@ commonRows <- apply(mat1, 1, function(row) {
 commonRows <- unlist(commonRows)
 
 interactions <- mat1[commonRows,]
+
+g <- buildGraphfromSigMat(interactions, channels(SPE[[1]]))

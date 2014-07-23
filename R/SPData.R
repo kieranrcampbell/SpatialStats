@@ -29,7 +29,7 @@ setMethod("rawData", "SPData", function(object) object@raw)
 
 #' Returns the number of cells in the sample
 #' @export
-setMethod("nCells", "SPData", function(object) dim(object@rawData)[1] )
+setMethod("nCells", "SPData", function(object) dim(object@raw)[1] )
 
 #' Returns the number of proteins measured (number of channels)
 #' @export
@@ -82,13 +82,13 @@ setMethod("dim", "SPData", function(x) c(nCells(x), nChannel(x)))
 #' Returns the sample id
 #'
 #' @export
-setMethod("id", "SPData", function(object) object@id)
+setMethod("ID", "SPData", function(object) object@id)
 
 #' Sets the sample id
 #'
-#' @name id<-
+#' @name ID<-
 #' @export
-setReplaceMethod("id", signature = "SPData",
+setReplaceMethod("ID", signature = "SPData",
                  function(object, value) {
                      object@id <- value
                      return(object)
@@ -191,6 +191,7 @@ setMethod("[", "SPData", function(x, i, j) {
     .weight <- weight(x)[i]
     .nnid <- neighbourIDs(x)[i]
     .cell.class <- cellClass(x)[i]
+    .pos <- xy(x)
 
     .Y <- as.matrix(cells(x)[i,j])
     .raw <- as.matrix(rawData(x)[i,j])
@@ -208,7 +209,7 @@ setMethod("[", "SPData", function(x, i, j) {
            cellNeighbours = .X,
            size = .size, id=.id,
            weights = .weight, nn.ids = .nnid,
-           raw = .raw, cellClass = .cell.class)
+           raw = .raw, cellClass = .cell.class, pos=.pos)
 })
 
 
@@ -242,13 +243,13 @@ setMethod("neighbourMean", signature("SPData", "logical", "logical"),
                           w <- weights[[i]]
                           total.boundary <- sum(w)
                           nn <- nn * w / total.boundary ## IMPORTANT: matrix * vector multiplication is by column
-                          colSums(nn)
+                          return( colSums(nn) )
                       } else {
-                          colMeans(nn)
+                          return( colMeans(nn) )
                       }
                   }
                   else {
-                      nn
+                      return( nn )
                   }
               })
 
@@ -306,8 +307,7 @@ setMethod("neighbourClass", signature("SPData","numeric"),
               nn
           })
 
-#' Filter out nearest neighbours by cell class. If cell i has no
-#' nearest neighbours of class cell.class then numeric(0) is returned.
+#' Selects only particular channels to be returned as nearest neighbours
 #'
 #' @param NN Neighbour list (e.g. via neighbours(sp))
 #' @param channel.ids A channel list to select out
