@@ -43,6 +43,7 @@ The class `SPData` also contains several plotting routines:
 ### SPExp
 
 An SPExp has four slots:
+
 1. `dir` Directory location of experiment files
 2. `files` List of files used in the experiment
 3. `spdata` List containing objects of class `SPData`
@@ -58,3 +59,16 @@ An SPExp has four slots:
 * `length(spe)` number of samples
 
 #### Example workflows
+Download all the original matlab files from
+https://s3.amazonaws.com/supplemental.cytobank.org/report_data/report_113/Figure_5/Figure_5_raw_image_files.zip
+and extract to
+~/myfolder
+
+We can then initialise an empty `SPE` with
+`spe <- SPExperimentfromDir("~/myfolder")`
+If the `files` option is left blank then all files are used.
+
+We can then load all the files into the object using
+`spe <- loadExp(spe)`
+(this may take some time for matlab -> R conversion)
+
