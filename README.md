@@ -65,10 +65,14 @@ and extract to
 ~/myfolder
 
 We can then initialise an empty `SPE` with
+
 `spe <- SPExperimentfromDir("~/myfolder")`
+
 If the `files` option is left blank then all files are used.
 
 We can then load all the files into the object using
+
 `spe <- loadExp(spe)`
+
 (this may take some time for matlab -> R conversion)
 
