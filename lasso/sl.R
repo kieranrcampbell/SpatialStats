@@ -97,7 +97,7 @@ pdf("img/xy.pdf",width=22,height=15)
 par(mfrow=c(4,8))
 for(i in 1:32) {
     plot(glmnet(X, Y[,i], standardize=FALSE), label="true",
-         main=channels(SPE.primaryl[[1]])[i], cex.main=1.5, xvar="dev")
+         main=channels(SPE.primary[[1]])[i], cex.main=1.5, xvar="dev")
 
 }
 dev.off()
@@ -106,7 +106,7 @@ dev.off()
 pdf("img/xy_cv.pdf",width=22,height=15)
 par(mfrow=c(4,8))
 for(i in 1:32) {
-    plot(cv.glmnet(X, Y[,i], standardize=FALSE), main=channels(SPE.primaryl[[1]])[i], cex.main=1.5)
+    plot(cv.glmnet(X, Y[,i], standardize=FALSE), main=channels(SPE.primary[[1]])[i], cex.main=1.5)
 }
 dev.off()
 
@@ -130,7 +130,7 @@ sig <- sapply(cvtests, function(cv) {
     cv <- cv$results
     pred.num <- abs(cv[,1])
     P <- cv[,3]
-    P <- p.adjust(P, method="BH")
+    P <- p.adjust(P, method="bonferroni")
     retval <- rep(0, length(pred.num))
     retval[pred.num] <-  as.numeric(P < 0.05)
     retval
@@ -139,3 +139,33 @@ sig <- sapply(cvtests, function(cv) {
 which(sig == 1, arr.ind=TRUE)
 
 cn <- channels(SPE[[1]])
+
+buildGraphfromSigMat <- function(mat, cnames) {
+    require(igraph)
+    diffRows <- which(mat[,1] != mat[,2])
+    mat <- mat[diffRows,]
+    from <- cnames[ mat[,1] ]
+    to <- cnames[ mat[,2] ]
+    from <- paste("NN", from,sep="-")
+
+    edgelist <- rep(NA, 2*length(to))
+    type <- rep(0:1, length(to))
+    edgelist[c(T,F)] <- from
+    edgelist[c(F,T)] <- to
+    g <- graph.data.frame(data.frame(from=from,to=to))
+
+    g
+}
+
+
+mat1 <- which(all.ps == 1, arr.ind=TRUE)
+mat2 <- which(sig == 1, arr.ind=TRUE)
+
+commonRows <- apply(mat1, 1, function(row) {
+    l1 <- mat2 == row
+    any(l1[,1] & l1[,2])
+})
+
+commonRows <- unlist(commonRows)
+
+interactions <- mat1[commonRows,]
