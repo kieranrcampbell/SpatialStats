@@ -6,6 +6,8 @@ Using devtools call `install_github("kieranrcampbell/SpatialPRo")`
 
 ### Usage
 
+`SpatialPRo` contains two different classes - `SPData` that represents a single (tissue) sample and `SPExp` that represents the entire experiment, storing a list of `SPData`s, the sample ids and the directory and filenames of the original files.
+
 There is an example dataset included - to load it first load the library via `library(SpatialPRo)` then call `data(sp5)`. This loads an example object of class `SPData` called `sp`. The following can then be used to access data elements:
 
 #### Generic SPData methods
