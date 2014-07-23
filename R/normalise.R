@@ -1,8 +1,10 @@
 
-############################################################
-## LOESS based normalisation for signal against cell size ##
-## kieran.campbell@sjc.ox.ac.uk                           ##
-############################################################
+
+###################################################################
+## Linear model based normalisation for signal against cell size ##
+###################################################################
+
+
 
 
 
@@ -11,7 +13,7 @@
 #' @export
 normaliseSP <- function(sp) {
     raw <- rawData(sp)
-    Y <- loessNormalise(raw, size(sp), cellClass(sp), FALSE)
+    Y <- lmNormalise(raw, size(sp), cellClass(sp), FALSE)
     Y <- totalProteinNormalise(Y)
     Y <- preprocess.centre(Y, cellClass(sp))
 
@@ -47,16 +49,16 @@ preprocess.centre <- function(Y, cell.class) {
 #'
 #' @param Y Measurement by channel matrix
 #' @param s Vector of cell sizes
-loessNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
+lmNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
     if(showPlot) {
-        plotLoess(Y, s, cell.classes)
+        plotLm(Y, s, cell.classes)
     }
 
     y <- lapply(1:2, function(i) Y[cell.classes == i,])
     sizes <- lapply(1:2, function(i) s[cell.classes == i])
 
 
-    y.norm <- lapply(1:2, function(i) loessY(y[[i]], sizes[[i]]))
+    y.norm <- lapply(1:2, function(i) lmY(y[[i]], sizes[[i]]))
 
     Y.n <- matrix(0, nrow=nrow(Y), ncol=ncol(Y))
     Y.n[cell.classes == 1, ] <- y.norm[[1]]
@@ -65,10 +67,10 @@ loessNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
     Y.n
 }
 
-loessY <- function(Y, s) {
+lmY <- function(Y, s) {
     Y <- apply(Y, 2, function(y) {
         ##print(c(length(y), length(s)))
-        fit <- loess(y ~ s)
+        fit <- lm(y ~ s)
         ##j <- order(s)
         ##plot(fit)
         ##lines(s[j], fit$fitted[j],col="red")
@@ -80,13 +82,13 @@ loessY <- function(Y, s) {
 #' y & s are lists
 #'
 #'
-plotLoess <- function(Y, s, cell.classes) {
+plotLm <- function(Y, s, cell.classes) {
     y <- lapply(1:2, function(i) Y[cell.classes == i,])
     sizes <- lapply(1:2, function(i) s[cell.classes == i])
 
     z1 <- y[[1]] ; z2 <- y[[2]]
-    l1 <- loess(z1[,1] ~ sizes[[1]])
-    l2 <- loess(z2[,1] ~ sizes[[2]])
+    l1 <- lm(z1[,1] ~ sizes[[1]])
+    l2 <- lm(z2[,1] ~ sizes[[2]])
 
     plot(s, Y[,1], col=cell.classes, xlab="Cell size (px)", ylab="Log expr")
     j1 <- order(sizes[[1]])
@@ -96,13 +98,13 @@ plotLoess <- function(Y, s, cell.classes) {
 
 }
 
-#' Uses loess normalisation to normalise by cell concentration
+#' Uses lm normalisation to normalise by cell concentration
 totalProteinNormalise <- function(Y) {
     nchannels <- dim(Y)[2]
     new.Y <- sapply(1:nchannels, function(i) {
         y <- Y[,i]
         totalP <- rowSums(Y[,-i])
-        fit <- loess(y ~ totalP)
+        fit <- lm(y ~ totalP)
         y - fit$fitted
     })
     colnames(new.Y) <- colnames(Y)

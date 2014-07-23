@@ -8,6 +8,8 @@
 library(glmnet)
 library(R.utils)
 library(devtools)
+library(lars)
+library(covTest)
 
 load_all("..")
 
@@ -24,15 +26,14 @@ load_all("..")
 
 source("hdimLasso.R")
 
-load("../data/SPE_prim.Rd")
 load("../data/SPE.Rd")
 load("../data/SPE_bad.Rd")
 ##SPE <- SPE.bad
 
-SPE.all <- SPExperiment("None", "None", spdata=c(SPlist(SPE), SPlist(SPE.bad)),
-                        ids = c(IDs(SPE), IDs(SPE.bad)))
+SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.bad)),
+                        ids = c(IDs(SPE)[4], IDs(SPE.bad)))
 
-SPE <- SPE.all
+SPE <- SPE.primary
 
 ## variable selection
 XY <- lapply(SPlist(SPE), function(sp) {
@@ -112,37 +113,12 @@ dev.off()
 ind <- c(2, 5, 8, 10, 11, 13, 15, 16, 17, 18, 22, 24,30)
 
 
-## let's do them separately
-
-## for(i in 1:3) {
-##     y <- all.y[[i]]
-##     x <- all.x[[i]]
-
-##     pdf(paste("img/cv",i,".pdf",sep=""), width=22, height=15)
-##     par(mfrow=c(4,8))
-##     for(j in 1:32) {
-##         cvf <- cv.glmnet(x,y[,j])
-##         plot(cvf, main=channels(sp)[j])
-##     }
-##     dev.off()
-## }
-
-
-## y <- all.y[[1]]
-## library(bnlearn)
-## df <- data.frame(y)
-## dag <- hc(df, score='bic-g')
-## fit <- bn.fit(dag, df)
-
-
-
-## lar <- lars(X, Y[,k], "lasso")
-## covTest(lar,X, Y[,k])
 
 all.ps <- apply(Y, 2, function(y) {
-    ps <- hdimLasso(y,X,B=50, s="lambda.min")
-    as.numeric(ps < 0.01)
+    ps <- hdimLasso(y,X,B=50, s="usemin", minP=5)
+    as.numeric(ps < 0.05)
 })
+
 which(all.ps == 1, arr.ind=TRUE)
 
 
@@ -154,10 +130,12 @@ sig <- sapply(cvtests, function(cv) {
     cv <- cv$results
     pred.num <- abs(cv[,1])
     P <- cv[,3]
-    ##P <- p.adjust(P, method="BH")
+    P <- p.adjust(P, method="BH")
     retval <- rep(0, length(pred.num))
-    retval[pred.num] <-  as.numeric(P < 0.01)
+    retval[pred.num] <-  as.numeric(P < 0.05)
     retval
 })
 
 which(sig == 1, arr.ind=TRUE)
+
+cn <- channels(SPE[[1]])
