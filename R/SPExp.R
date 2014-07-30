@@ -113,3 +113,44 @@ getIDfromTMAname <- function(str) {
     id <- as.numeric(splt2[1])
     id
 }
+
+
+
+#' Bind multiple sample data together
+#'
+#' Given an SPExp object, separate out each cell type,
+#' calculate neighbour means and bind together, providing
+#' more statistical power. Returns a list with cell readouts (Y),
+#' neighbour means (X) and the number of cells from each sample (sizes)
+#'
+#' @param SPE The SPExp object to use
+#' @param pickTumour Logical indicating whether or not to separate out cell types
+#' @param useWeights Passed to neighbourMeans
+#' @param normalise Whether to centre the columns
+#'
+#' @export
+bindSPE <- function(SPE, pickTumour=TRUE, useWeights=TRUE, normalise=TRUE) {
+    ## variable selection
+    XY <- lapply(SPlist(SPE), function(sp) {
+        if(pickTumour) {
+            tumourID <- findTumourID(sp)
+            tumourCells <- which(cellClass(sp) == tumourID)
+        }
+
+        Y <- cells(sp)
+        X <- neighbourMean(sp, useWeights, normalise)
+
+        Y <- Y[tumourCells, ]
+        X <- X[tumourCells, ]
+
+        list(X=X,Y=Y)
+    })
+    sizes <- sapply(XY, function(xy) nrow(xy$Y))
+
+    all.x <- lapply(XY, function(xy) xy$X)
+    all.y <- lapply(XY, function(xy) xy$Y)
+
+    X <- do.call(rbind, all.x)
+    Y <- do.call(rbind, all.y)
+    return( list( X=X, Y=Y, sizes=sizes))
+}
