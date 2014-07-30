@@ -123,7 +123,9 @@ adaptiveP <- function(P, gamma.min) {
     Qs <- sapply(grange, Q.gamma, P)
     inf.Q <- min(Qs)
 
-    return( (1 - log(gamma.min) ) * inf.Q )
+    pj <- (1 - log(gamma.min)) * inf.Q
+    pj[pj > 1] <- 1 # resize p-values down to 1
+    return( pj )
 }
 
 

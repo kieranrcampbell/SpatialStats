@@ -4,7 +4,6 @@
 ## kieran.campbell@sjc.ox.ac.uk                                           ##
 ############################################################################
 
-##library(devtools)
 library(glmnet)
 library(R.utils)
 library(devtools)
@@ -12,156 +11,117 @@ library(lars)
 library(covTest)
 
 load_all("..")
-
-##load("../data/SPE.Rd")
-## load("../data/SPE_bad.Rd")
-
-## primary.er1 <- c(2, 4)
-## primary.er2 <- c(3)
-
-## sp.list <- c(SPlist(SPE)[primary.er1], SPlist(SPE.bad)[primary.er2])
-## ids <- sapply(sp.list, id)
-## SPE.primaryl <- SPExperiment(dir="none", files="none", spdata=sp.list, ids=ids)
-
-
 source("hdimLasso.R")
 
+#' Cleans up results of the covariance test statistic and applies the
+#' bonferroni multiple testing correction for each response variable
+AdjustCovtests <- function(cvtests, nvar) {
+    sapply(cvtests, function(cv) {
+        cv <- cv$results
+        pred.num <- abs(cv[,1])
+
+        ## if a predictor appears more than once, remove it from the
+        ## table as it may be unreliable
+        ta <- table(abs(pred.num))
+        multiple <- as.numeric(names(which(ta > 1)))
+        P <- cv[,3]
+
+        if(length(multiple) > 0) {
+            toRemove <- which(pred.num == multiple)
+            pred.num <- pred.num[-toRemove]
+            P <- P[-toRemove]
+        }
+
+        P <- p.adjust(P, method="bonferroni")
+        retval <- rep(NA, nvar)
+        retval[pred.num] <-  P
+        retval[is.na(retval)] <- 1 # if a predictor doesn't appear at all, p-value of 1
+        retval
+    })
+}
+
+
+
+doJointAnalysis <- function(SPE, useWeights=TRUE) {
+    ## bind data together and add factors
+    XY <- BindSPE(SPE, useWeights)
+    X <- XY$X
+    Y <- XY$Y
+
+    factors <- ConstructSampleFactors(XY, IDs(SPE))
+    X <- cbind(X, factors)
+
+    ## multisample split results
+    multisplit.res <- apply(Y, 2, function(y) {
+        ps <- hdimLasso(y,X,B=50, s="usemin", minP=5)
+        ps
+    })
+
+
+    ## lars stuff
+    lar <- apply(Y, 2, function(y) lars(X, y, "lasso", normalize=FALSE))
+    cvtests <- lapply(1:length(lar), function(i) covTest(lar[[i]], X, Y[,i]))
+
+    ## clean up the covariance test statistics and apply bonferroni
+    cv.results <- AdjustCovtests(cvtests, ncol(X))
+
+    ## multiple testing corrections
+    nsamp <- 32
+    alpha <- 0.05
+
+    cv.results <- apply(cv.results, 1, p.adjust, method="BH")
+    cv.results <- t(cv.results) # why??
+
+    multisplit.res <- apply(multisplit.res, 1, p.adjust, method="BH")
+    multisplit.res <- t(multisplit.res)
+
+
+    ## results
+    covtest.res <- which(cv.results < alpha, arr.ind=TRUE)
+    multi.res <- which(multisplit.res < alpha, arr.ind=TRUE)
+    rownames(multi.res) <- NULL
+
+    return( list(covtest=covtest.res, multisplit=multi.res ))
+}
+
+## load data
 load("../data/SPE.Rd")
 load("../data/SPE_bad.Rd")
-##SPE <- SPE.bad
 
+## construct SPE of good primary tumours
 SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.bad)),
                         ids = c(IDs(SPE)[4], IDs(SPE.bad)))
 
 SPE <- SPE.primary
 
-bindSPE <- function(SPE, pickTumour=TRUE) {
-    ## variable selection
-    XY <- lapply(SPlist(SPE), function(sp) {
-        if(pickTumour) {
-            tumourID <- findTumourID(sp)
-            tumourCells <- which(cellClass(sp) == tumourID)
-        }
-
-        Y <- cells(sp)
-        X <- neighbourMean(sp, TRUE, TRUE)
-
-        Y <- Y[tumourCells, ]
-        X <- X[tumourCells, ]
-
-        list(X=X,Y=Y)
+findOverlap <- function(a.results) {
+    sr <- lapply(a.results, function(mat) {
+        cross <- which(mat[,1] != mat[,2])
+        mat[cross,]
     })
-    sizes <- sapply(XY, function(xy) nrow(xy$Y))
 
-    all.x <- lapply(XY, function(xy) xy$X)
-    all.y <- lapply(XY, function(xy) xy$Y)
+    intersect <- apply(sr[[1]], 1, function(row) {
+        r.logic <- row == sr[[2]]
+        if(is.matrix(r.logic)) {
+            any(r.logic[,1] & r.logic[,2])
+        } else {
+            r.logic[1] && r.logic[2]
+        }
+    })
 
-    X <- do.call(rbind, all.x)
-    Y <- do.call(rbind, all.y)
-    return( list( X=X, Y=Y, sizes=sizes))
+    pathways <- sr[[1]][intersect,]
+    if(!is.matrix(pathways)) {
+        pathways <- channels(SPE[[1]])[pathways]
+    } else {
+        pathways <- t(apply(pathways, 1, function(pw) channels(SPE[[1]])[pw]))
+    }
+    pathways
 }
 
-XY <- bindSPE(SPE)
-X <- XY$X
-Y <- XY$Y
+set.seed(123)
 
-cell.sizes <- XY$sizes
-Nfactors <- length(cell.sizes) - 1
-factors <- NULL
-for(i in 1:Nfactors) {
-    tcol <- rep(0, sum(cell.sizes))
-    cs <- cumsum(cell.sizes)
-    range <- (cs[i] + 1):cs[i+1]
-    tcol[ range ] <- 1
-    factors <- cbind(factors, tcol)
-}
+withWeights <- doJointAnalysis(SPE, useWeights=TRUE)
+noWeights <- doJointAnalysis(SPE, useWeights=FALSE)
 
-## normalise Y & X to have mean 0 and unit variance
-m0uv <- function(x) (x - mean(x)) / sd(x)
-Y <- apply(Y, 2, m0uv)
-X <- apply(X, 2, m0uv)
-
-
-colnames(factors) <- paste("sample", IDs(SPE)[1:Nfactors], sep="")
-
-X <- cbind(X, factors)
-
-
-pdf("img/xy.pdf",width=22,height=15)
-par(mfrow=c(4,8))
-for(i in 1:32) {
-    plot(glmnet(X, Y[,i], standardize=FALSE), label="true",
-         main=channels(SPE.primary[[1]])[i], cex.main=1.5, xvar="dev")
-
-}
-dev.off()
-
-
-pdf("img/xy_cv.pdf",width=22,height=15)
-par(mfrow=c(4,8))
-for(i in 1:32) {
-    plot(cv.glmnet(X, Y[,i], standardize=FALSE), main=channels(SPE.primary[[1]])[i], cex.main=1.5)
-}
-dev.off()
-
-ind <- c(2, 5, 8, 10, 11, 13, 15, 16, 17, 18, 22, 24,30)
-
-
-
-all.ps <- apply(Y, 2, function(y) {
-    ps <- hdimLasso(y,X,B=50, s="usemin", minP=5)
-    as.numeric(ps < 0.05)
-})
-
-which(all.ps == 1, arr.ind=TRUE)
-
-
-## lars stuff
-lar <- apply(Y, 2, function(y) lars(X, y, "lasso", normalize=FALSE))
-cvtests <- lapply(1:length(lar), function(i) covTest(lar[[i]], X, Y[,i]))
-
-sig <- sapply(cvtests, function(cv) {
-    cv <- cv$results
-    pred.num <- abs(cv[,1])
-    P <- cv[,3]
-    P <- p.adjust(P, method="bonferroni")
-    retval <- rep(0, length(pred.num))
-    retval[pred.num] <-  as.numeric(P < 0.05)
-    retval
-})
-
-which(sig == 1, arr.ind=TRUE)
-
-cn <- channels(SPE[[1]])
-stop("done")
-buildGraphfromSigMat <- function(mat, cnames) {
-    require(igraph)
-    diffRows <- which(mat[,1] != mat[,2])
-    mat <- mat[diffRows,]
-    from <- cnames[ mat[,1] ]
-    to <- cnames[ mat[,2] ]
-    from <- paste("NN", from,sep="-")
-
-    edgelist <- rep(NA, 2*length(to))
-    type <- rep(0:1, length(to))
-    edgelist[c(T,F)] <- from
-    edgelist[c(F,T)] <- to
-    g <- graph.data.frame(data.frame(from=from,to=to))
-
-    g
-}
-
-
-mat1 <- which(all.ps == 1, arr.ind=TRUE)
-mat2 <- which(sig == 1, arr.ind=TRUE)
-
-commonRows <- apply(mat1, 1, function(row) {
-    l1 <- mat2 == row
-    any(l1[,1] & l1[,2])
-})
-
-commonRows <- unlist(commonRows)
-
-interactions <- mat1[commonRows,]
-
-g <- buildGraphfromSigMat(interactions, channels(SPE[[1]]))
+pathways.with <- findOverlap(withWeights)
+pathways.nowe <- findOverlap(noWeights)

@@ -129,19 +129,18 @@ getIDfromTMAname <- function(str) {
 #' @param normalise Whether to centre the columns
 #'
 #' @export
-bindSPE <- function(SPE, pickTumour=TRUE, useWeights=TRUE, normalise=TRUE) {
+BindSPE <- function(SPE, pickTumour=TRUE, useWeights=TRUE, normalise=TRUE) {
     ## variable selection
     XY <- lapply(SPlist(SPE), function(sp) {
-        if(pickTumour) {
-            tumourID <- findTumourID(sp)
-            tumourCells <- which(cellClass(sp) == tumourID)
-        }
-
         Y <- cells(sp)
         X <- neighbourMean(sp, useWeights, normalise)
 
-        Y <- Y[tumourCells, ]
-        X <- X[tumourCells, ]
+        if(pickTumour) {
+            tumourID <- findTumourID(sp)
+            tumourCells <- which(cellClass(sp) == tumourID)
+            Y <- Y[tumourCells, ]
+            X <- X[tumourCells, ]
+        }
 
         list(X=X,Y=Y)
     })
@@ -152,5 +151,38 @@ bindSPE <- function(SPE, pickTumour=TRUE, useWeights=TRUE, normalise=TRUE) {
 
     X <- do.call(rbind, all.x)
     Y <- do.call(rbind, all.y)
+
+    ## normalise Y & X to have mean 0 and unit variance
+    if(normalise) {
+        m0uv <- function(x) (x - mean(x)) / sd(x)
+        Y <- apply(Y, 2, m0uv)
+        X <- apply(X, 2, m0uv)
+    }
+
     return( list( X=X, Y=Y, sizes=sizes))
+}
+
+#' Construct model matrix for integrating multiple samples
+#'
+#' Given the output of the function BindSPE we would like to control
+#' for biases introduced by binning all the data together. ConstructSampleFactors
+#' takes the output of BindSPE and returns a model matrix of factors highlighting
+#' what sample a given cell is from
+#'
+#' @param XY Output of BindSPE
+#'
+#' @export
+ConstructSampleFactors <- function(XY, sample.ids) {
+    cell.sizes <- XY$sizes
+    Nfactors <- length(cell.sizes) - 1
+    factors <- NULL
+    for(i in 1:Nfactors) {
+        tcol <- rep(0, sum(cell.sizes))
+        cs <- cumsum(cell.sizes)
+        range <- (cs[i] + 1):cs[i+1]
+        tcol[ range ] <- 1
+        factors <- cbind(factors, tcol)
+    }
+    colnames(factors) <- paste("sample", sample.ids[1:Nfactors], sep="")
+    factors
 }
