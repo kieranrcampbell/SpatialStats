@@ -12,5 +12,5 @@ Imports:
     corrplot,
     EMCluster,
     glmnet
-LazyLoad: TRUE
+LazyData: TRUE
 License: MIT
