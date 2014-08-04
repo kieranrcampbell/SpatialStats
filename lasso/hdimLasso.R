@@ -70,14 +70,17 @@ doLasso <- function(y,X,s, minP = NULL) {
 
 #' Performs standard least squares and returns
 #' p-values adjusted for multiple testing (bonferroni)
-doLSReg <- function(y, X, predictors, alpha) {
+#' keep.last: we want to force it to take the samples into account
+#' so make sure the last four predictors are always in the model
+doLSReg <- function(y, X, predictors, alpha, keep.last=4) {
     ## magnitude of the prediction subset
-    s.mag <- length(predictors)
+    sample.factors <- ncol(X):( ncol(X) - keep.last)
+    s.mag <- length(predictors) + keep.last
     nPredict <- ncol(X)
 
     if(length(predictors) == 0) return( rep(1, nPredict )) # lasso gives no predictors -> return p=1
 
-    fit <- lm(y ~ X[,predictors] )
+    fit <- lm(y ~ X[,c(predictors, sample.factors)] )
 
     ## vector of p values for all predictors to return
     pVec <- rep(1, nPredict)
@@ -92,7 +95,7 @@ doLSReg <- function(y, X, predictors, alpha) {
     p.signif <- p.signif * s.mag
     p.signif <- sapply(p.signif, min, 1) # scale > 1 to 1
 
-    pVec[ predictors[which.signif] ] <- p.signif
+    pVec[ c(predictors, sample.factors)[which.signif] ] <- p.signif
     names(pVec) <- colnames(X)
     pVec
 }
