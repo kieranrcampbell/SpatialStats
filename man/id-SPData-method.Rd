@@ -1,9 +1,9 @@
 \docType{methods}
-\name{id,SPData-method}
-\alias{id,SPData-method}
+\name{ID,SPData-method}
+\alias{ID,SPData-method}
 \title{Returns the sample id}
 \usage{
-\S4method{id}{SPData}(object)
+\S4method{ID}{SPData}(object)
 }
 \description{
 Returns the sample id

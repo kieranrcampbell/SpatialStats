@@ -1,0 +1,17 @@
+\name{SPExperimentfromDir}
+\alias{SPExperimentfromDir}
+\title{Load an experiment from cytobank in matlab format}
+\usage{
+SPExperimentfromDir(directory, files = NULL)
+}
+\arguments{
+  \item{directory}{The directory containing the experiment
+  files}
+
+  \item{files}{The filenames to load. Default is NULL, in
+  which case all files in the directory are used}
+}
+\description{
+Load an experiment from cytobank in matlab format
+}
+

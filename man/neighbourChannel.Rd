@@ -1,7 +1,6 @@
 \name{neighbourChannel}
 \alias{neighbourChannel}
-\title{Filter out nearest neighbours by cell class. If cell i has no
-nearest neighbours of class cell.class then numeric(0) is returned.}
+\title{Selects only particular channels to be returned as nearest neighbours}
 \usage{
 neighbourChannel(NN, channel.ids)
 }
@@ -11,8 +10,7 @@ neighbourChannel(NN, channel.ids)
   \item{channel.ids}{A channel list to select out}
 }
 \description{
-Filter out nearest neighbours by cell class. If cell i has
-no nearest neighbours of class cell.class then numeric(0)
-is returned.
+Selects only particular channels to be returned as nearest
+neighbours
 }
 
