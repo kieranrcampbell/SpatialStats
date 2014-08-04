@@ -101,12 +101,21 @@ findOverlap <- function(a.results) {
     })
 
     intersect <- apply(sr[[1]], 1, function(row) {
-        r.logic <- row == sr[[2]]
-        if(is.matrix(r.logic)) {
-            any(r.logic[,1] & r.logic[,2])
+        if(is.matrix(sr[[2]])) {
+            r.logic <- apply(sr[[2]], 1, function(r) {
+                l <- r == row
+                l[1] & l[2]
+            })
+            any(r.logic)
         } else {
-            r.logic[1] && r.logic[2]
+            l <- sr[[2]] == row
+            l[1] & l[2]
         }
+        ## if(is.matrix(r.logic)) {
+        ##     any(r.logic[,1] & r.logic[,2])
+        ## } else {
+        ##     r.logic[1] && r.logic[2]
+        ## }
     })
 
     pathways <- sr[[1]][intersect,]
