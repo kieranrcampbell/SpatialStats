@@ -111,7 +111,7 @@ setMethod("xy", "SPData", function(object) object@pos)
 #' @export
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
-    if(id(object) > -1) cat(" Sample ID: ", id(object), "\n", sep="")
+    if(ID(object) > -1) cat(" Sample ID: ", ID(object), "\n", sep="")
     cat(" ", nCells(object), " cells with ", nChannel(object), " channel(s)\n", sep="")
     invisible(NULL)
 
@@ -127,14 +127,14 @@ setValidity("SPData", function(object) {
         msg <- c(msg, "Nearest neighbour data not available for all cells")
     }
 
-    if(!is.null(xy(object))) {
-        if(nCells(object) != ncol(xy(object))) {
+    if(!is.null(xy(object)) && length(xy(object)) > 1) {
+        if(nCells(object) != nrow(xy(object))) {
             valid <- FALSE
             msg <- c(msg, "Length mismatch between location info and number of cells")
         }
     }
 
-    if(length(weight(object)) > 0 ) { ## okay for object not to have weights
+    if(length(weight(object)) > 1 ) { ## okay for object not to have weights
         if(length(weight(object)) != nCells(object)) {
             valid <- FALSE
             msg <- c(msg, "Number of weights and number of cells differ")
@@ -187,7 +187,7 @@ setMethod("[", "SPData", function(x, i, j) {
 
     .n.proteins <- length(j)
     .channelNames <- channels(x)[j]
-    .id <- id(x)
+    .id <- ID(x)
     .weight <- weight(x)[i]
     .nnid <- neighbourIDs(x)[i]
     .cell.class <- cellClass(x)[i]

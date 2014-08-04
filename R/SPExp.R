@@ -186,3 +186,15 @@ ConstructSampleFactors <- function(XY, sample.ids) {
     colnames(factors) <- paste("sample", sample.ids[1:Nfactors], sep="")
     factors
 }
+
+
+#' SPExp object with 5 samples used in report.
+#'
+#' A dataset of 5 samples of type SPData held in an SPExp object.
+#'
+#' @docType data
+#' @keywords SPExp
+#' @name SPE_report
+#' @usage data(SPE_report)
+#' @format An SPExp object with 5 samples
+NULL
