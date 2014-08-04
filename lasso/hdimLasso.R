@@ -13,13 +13,14 @@
 #' @param B Number of times to partition the matrix
 #' @param s The value of lambda to use in lasso (normally use
 #' either "lambda.min" or "lambda.1se" as per glmnet package)
+#' @param include Set of predictors to be force-included in OLS analysis
 hdimLasso <- function(y,X, B=100, s=c("lambda.1se","lambda.min","halfway","usemin"),
-                                      gamma.min=0.05, alpha=0.05, minP=NULL) {
+                                      gamma.min=0.05, alpha=0.05, minP=NULL, include) {
     require(glmnet)
 
     if(nrow(X) != length(y)) stop("Number of samples doesn't match")
 
-    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha, minP) )
+    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha, minP, include) )
     mode(p.mat) <- "numeric" # weird
 
     adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
@@ -29,7 +30,7 @@ hdimLasso <- function(y,X, B=100, s=c("lambda.1se","lambda.min","halfway","usemi
 
 #' Performs a single split of the data into floor(N/2) and N - floor(N/2)
 #' groups and performs lasso & LS estimation
-doSingleSplit <- function(y,X,s,alpha, minP) {
+doSingleSplit <- function(y,X,s,alpha, minP, include) {
     n.samp <- length(y)
     sample.in <- sample(1:n.samp, size = floor(n.samp / 2))
     sample.out <- setdiff(1:n.samp, sample.in)
@@ -41,7 +42,7 @@ doSingleSplit <- function(y,X,s,alpha, minP) {
 
     ##print(paste("Using", length(predictors), "out of total", ncol(X), sep=" "))
 
-    p.vals <- doLSReg(y.out, X.out, predictors, alpha)
+    p.vals <- doLSReg(y.out, X.out, predictors, alpha, include)
     return(p.vals)
 }
 
@@ -72,15 +73,16 @@ doLasso <- function(y,X,s, minP = NULL) {
 #' p-values adjusted for multiple testing (bonferroni)
 #' keep.last: we want to force it to take the samples into account
 #' so make sure the last four predictors are always in the model
-doLSReg <- function(y, X, predictors, alpha, keep.last=4) {
+doLSReg <- function(y, X, predictors, alpha, include=NULL) {
     ## magnitude of the prediction subset
-    sample.factors <- ncol(X):( ncol(X) - keep.last)
-    s.mag <- length(predictors) + keep.last
+    s.mag <- length(predictors) + length(include)
     nPredict <- ncol(X)
 
     if(length(predictors) == 0) return( rep(1, nPredict )) # lasso gives no predictors -> return p=1
 
-    fit <- lm(y ~ X[,c(predictors, sample.factors)] )
+    full.pred <- c(predictors, include) ## full set of predictors
+
+    fit <- lm(y ~ X[,full.pred] )
 
     ## vector of p values for all predictors to return
     pVec <- rep(1, nPredict)
@@ -95,7 +97,7 @@ doLSReg <- function(y, X, predictors, alpha, keep.last=4) {
     p.signif <- p.signif * s.mag
     p.signif <- sapply(p.signif, min, 1) # scale > 1 to 1
 
-    pVec[ c(predictors, sample.factors)[which.signif] ] <- p.signif
+    pVec[ full.pred[which.signif] ] <- p.signif
     names(pVec) <- colnames(X)
     pVec
 }
