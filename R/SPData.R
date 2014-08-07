@@ -121,10 +121,11 @@ setMethod("show", "SPData", function(object) {
 setValidity("SPData", function(object) {
     msg <- NULL
     valid <- TRUE
-    if(nCells(object) != length(neighbours(object))) {
-        print(nCells(object))
-        valid <- FALSE
-        msg <- c(msg, "Nearest neighbour data not available for all cells")
+    if(length(neighbours(object)) > 1) {
+        if(nCells(object) != length(neighbours(object))) {
+            valid <- FALSE
+            msg <- c(msg, "Nearest neighbour data not available for all cells")
+        }
     }
 
     if(!is.null(xy(object)) && length(xy(object)) > 1) {
@@ -141,8 +142,10 @@ setValidity("SPData", function(object) {
         }
     }
 
-    if(nCells(object) != dim(cells(object))[1]) {
+    if(nCells(object) != nrow(rawData(object))) {
         valid <- FALSE
+        ##print(nCells(object))
+        ##print(nrow(cells(object)))
         msg <- c(msg, "Number of cells must be equal to number of rows in cell by protein matrix")
     }
 

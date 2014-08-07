@@ -76,6 +76,12 @@ setMethod("[[", "SPExp",
               return( x@spdata[[i]])
           })
 
+setReplaceMethod(f = "[[",
+                 signature = "SPExp",
+                 definition = function(x,i, value) {
+                     x@spdata[[i]] <- value
+                     x
+                 })
 
 #' Returns the list of SPData samples
 #' @export

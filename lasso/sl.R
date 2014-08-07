@@ -51,9 +51,15 @@ doJointAnalysis <- function(SPE, useWeights=TRUE) {
     factors <- ConstructSampleFactors(XY, IDs(SPE))
     X <- cbind(X, factors)
 
+    ## randomise?
+    ##X <- X[sample(nrow(X)),]
+
+    npred <- ncol(X)
+    include <- npred:(npred - ncol(factors) + 1)
+
     ## multisample split results
     multisplit.res <- apply(Y, 2, function(y) {
-        ps <- hdimLasso(y,X,B=50, s="usemin", minP=5)
+        ps <- hdimLasso(y,X,B=50, s="usemin", minP=5, include=include)
         ps
     })
 
@@ -84,21 +90,32 @@ doJointAnalysis <- function(SPE, useWeights=TRUE) {
     return( list(covtest=covtest.res, multisplit=multi.res ))
 }
 
-## load data
-load("../data/SPE.Rd")
-load("../data/SPE_bad.Rd")
+## ## load data
+## load("../data/SPE.rda")
+## load("../data/SPE_bad.rda")
 
-## construct SPE of good primary tumours
-SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.bad)),
-                        ids = c(IDs(SPE)[4], IDs(SPE.bad)))
+## ## construct SPE of good primary tumours
+## SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.bad)),
+##                         ids = c(IDs(SPE)[4], IDs(SPE.bad)))
 
-SPE <- SPE.primary
+## SPE <- SPE.primary
 
-findOverlap <- function(a.results) {
-    sr <- lapply(a.results, function(mat) {
-        cross <- which(mat[,1] != mat[,2])
-        mat[cross,]
-    })
+load("../data/SPE_report.rda")
+
+findOverlap <- function(a.results, remove=c("same", "different")) {
+    sr <- NULL
+
+    if(remove == "different") {
+        sr <- lapply(a.results, function(mat) {
+            cross <- which(mat[,1] != mat[,2])
+            mat[cross,]
+        })
+    } else {
+        sr <- lapply(a.results, function(mat) {
+            cross <- which(mat[,1] == mat[,2])
+            mat[cross,]
+        })
+    }
 
     intersect <- apply(sr[[1]], 1, function(row) {
         if(is.matrix(sr[[2]])) {
@@ -129,8 +146,39 @@ findOverlap <- function(a.results) {
 
 set.seed(123)
 
+immune.ind <- c(5,7,8,10,19,28)
+for(i in 1:length(SPE)) SPE[[i]] <-  SPE[[i]][,-immune.ind]
+
 withWeights <- doJointAnalysis(SPE, useWeights=TRUE)
 noWeights <- doJointAnalysis(SPE, useWeights=FALSE)
 
-pathways.with <- findOverlap(withWeights)
-pathways.nowe <- findOverlap(noWeights)
+pathways.with <- findOverlap(withWeights, remove="different")
+pathways.nowe <- findOverlap(noWeights, remove="different")
+
+pw.same <- findOverlap(noWeights, remove="same")
+
+
+## statistical power calculation
+
+stop("done")
+fit.all <- lm(Y ~ X)
+s <- summary(fit)
+rs <- sapply(s, function(x) x$adj.r.squared)
+
+mrs <-  mean(rs)
+nrow(X)
+
+sp <- SPE[[1]]
+y <- cells(sp)
+x <- neighbourMean(sp, F, T)
+
+tumourID <- findTumourID(sp)
+tumourCells <- which(cellClass(sp) == tumourID)
+y <- y[tumourCells, ]
+x <- x[tumourCells, ]
+fit.1 <- lm(y ~ x)
+s1 <- summary(fit.1)
+nrow(x)
+
+rs1 <- sapply(s1, function(x) x$adj.r.squared)
+mrs1 <-  mean(rs1)

@@ -80,7 +80,8 @@ doLSReg <- function(y, X, predictors, alpha, include=NULL) {
 
     if(length(predictors) == 0) return( rep(1, nPredict )) # lasso gives no predictors -> return p=1
 
-    full.pred <- c(predictors, include) ## full set of predictors
+    full.pred <- c(predictors, include) # full set of predictors
+    full.pred <- unique(full.pred) # remove any duplicates (unlikely)
 
     fit <- lm(y ~ X[,full.pred] )
 
