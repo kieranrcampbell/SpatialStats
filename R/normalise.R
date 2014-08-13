@@ -1,11 +1,6 @@
-
-
 ###################################################################
 ## Linear model based normalisation for signal against cell size ##
 ###################################################################
-
-
-
 
 
 #' Data normalisation after classification
@@ -13,9 +8,11 @@
 #' @export
 normaliseSP <- function(sp) {
     raw <- rawData(sp)
+    raw <- preprocess.centre(raw, cellClass(sp))
+
     Y <- lmNormalise(raw, size(sp), cellClass(sp), FALSE)
-    Y <- totalProteinNormalise(Y)
-    Y <- preprocess.centre(Y, cellClass(sp))
+
+    Y <- totalProteinNormalise(Y, cell.classes=cellClass(sp))
 
     X <- lapply(neighbourIDs(sp), function(id) {
         Y[id,]
@@ -60,7 +57,7 @@ lmNormalise <- function(Y, s, cell.classes, showPlot=FALSE) {
 
     y.norm <- lapply(1:2, function(i) lmY(y[[i]], sizes[[i]]))
 
-    Y.n <- matrix(0, nrow=nrow(Y), ncol=ncol(Y))
+    Y.n <- matrix(NA, nrow=nrow(Y), ncol=ncol(Y))
     Y.n[cell.classes == 1, ] <- y.norm[[1]]
     Y.n[cell.classes == 2, ] <- y.norm[[2]]
     colnames(Y.n) <- colnames(Y)
@@ -99,15 +96,37 @@ plotLm <- function(Y, s, cell.classes) {
 }
 
 #' Uses lm normalisation to normalise by cell concentration
-totalProteinNormalise <- function(Y) {
-    nchannels <- dim(Y)[2]
-    new.Y <- sapply(1:nchannels, function(i) {
-        y <- Y[,i]
-        totalP <- rowSums(Y[,-i])
-        fit <- lm(y ~ totalP)
-        y - fit$fitted
-    })
-    colnames(new.Y) <- colnames(Y)
-    new.Y
+#'
+#' @param separate Normalise each cell class separately
+#' @param cell.classes The cell classes as passed by cellClass
+#'
+totalProteinNormalise <- function(Y, separate=TRUE, cell.classes=NULL) {
+    nchannels <- ncol(Y)
+    if(!separate) {
+        new.Y <- sapply(1:nchannels, function(i) {
+            y <- Y[,i]
+            totalP <- rowSums(Y[,-i])
+            fit <- lm(y ~ totalP)
+            y - fit$fitted
+        })
+        colnames(new.Y) <- colnames(Y)
+        return(new.Y)
+    } else {
+        y <- lapply(1:2, function(i) Y[cell.classes == i,])
+        y.concnorm <- lapply(y, function(yc) {
+            new.yc <- sapply(1:nchannels, function(i) {
+                V <- yc[,i]
+                Z <- rowSums(yc[,-i])
+                fit <- lm(V ~ Z)
+                residuals(fit)
+            })
+            new.yc
+        })
+        Y.n <- matrix(NA, nrow=nrow(Y), ncol=ncol(Y))
+        Y.n[cell.classes == 1, ] <- y.concnorm[[1]]
+        Y.n[cell.classes == 2, ] <- y.concnorm[[2]]
+        colnames(Y.n) <- colnames(Y)
+        return(Y.n)
+    }
 }
 

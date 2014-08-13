@@ -146,6 +146,8 @@ findOverlap <- function(a.results, remove=c("same", "different")) {
 
 set.seed(123)
 
+SPE@spdata <- lapply(SPlist(SPE), normaliseSP)
+
 immune.ind <- c(5,7,8,10,19,28)
 for(i in 1:length(SPE)) SPE[[i]] <-  SPE[[i]][,-immune.ind]
 
