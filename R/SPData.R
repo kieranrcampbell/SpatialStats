@@ -34,7 +34,17 @@ setMethod(f = "cells",
           signature = "SPData",
           definition = function(object) object@readouts )
 
-#' @rdname rawData-methods
+#' @rdname cells-methods
+#' @name cells<-
+#' @aliases cells<-,SPData-methods
+setReplaceMethod("cells", signature = "SPData",
+                 function(object, value) {
+                     object@readouts <- value
+                     validObject(object)
+                     return(object)
+                 })
+
+#' @rdname raw-methods
 #' @aliases rawData,SPData-methods
 setMethod(f = "rawData",
           signature = "SPData",
@@ -66,6 +76,17 @@ setMethod(f = "neighbours",
     object@cellNeighbours
 })
 
+#' @rdname neighbours-methods
+#' @name neighbours<-
+#' @aliases neighbours<-,SPData-methods
+setReplaceMethod("neighbours", signature = "SPData",
+                 function(object, value) {
+                     object@cellNeighbours <- value
+                     validObject(object)
+                     return(object)
+                 })
+
+
 #' @rdname size-methods
 #' @aliases size,SPData-methods
 setMethod(f = "size",
@@ -73,52 +94,71 @@ setMethod(f = "size",
           definition = function(object) object@size)
 
 #' @rdname weight-methods
-#' @aliases size,SPData-methods
+#' @aliases weight,SPData-methods
 setMethod(f = "weight",
           signature = "SPData",
-          definition = function(object) object@weights)
+          def = function(object) object@weights)
 
-#' @rdname w-methods
+#' @rdname weight-methods
+#' @name weight<-
 #' @aliases weight<-,SPData-methods
-setReplaceMethod("weight", signature="SPData",
+setReplaceMethod(f = "weight",
+                 signature="SPData",
                  function(object, value) {
                      object@weights <- value
                      return(object)
                  })
 
 
-#' Gives dimension of underlying matrix representation
+#' Dimension of underlying matrix representation
 #'
-#' Returns number of cells and number of proteins as dimension of
-#' underlying matrix
-#' @export
-setMethod("dim", "SPData", function(x) c(nCells(x), nChannel(x)))
+#' Vector of length 2 that represents the dimensions of the
+#' underlying cell matrix. The first entry is the number of cells
+#' and the second is the number of channels. Equivalent to
+#' dim(cells(x))
+#'
+#' @param x The SPData object to use
+#' @name dim
+#' @rdname dim-methods
+#' @exportMethod dim
+setMethod(f = "dim",
+          signature = "SPData",
+          def  = function(x) c(nCells(x), nChannel(x)))
 
-#' Returns the sample id
-#'
-#' @export
-setMethod("ID", "SPData", function(object) object@id)
+#' @rdname id-methods
+#' @aliases ID,SPData-methods
+setMethod(f = "ID",
+          signature = "SPData",
+          def  = function(object) object@id)
 
-#' Sets the sample id
-#'
 #' @name ID<-
-#' @export
-setReplaceMethod("ID", signature = "SPData",
+#' @rdname id-methods
+#' @aliases ID<-,SPData-methods
+setReplaceMethod(f = "ID",
+                 signature = "SPData",
                  function(object, value) {
                      object@id <- value
                      return(object)
                  })
 
-#' Returns the nearest neighbour ids
-#'
-#' @export
-setMethod("neighbourIDs", "SPData", function(object) object@nn.ids)
+#' @rdname neighbourid-methods
+#' @aliases neighbourIDs,SPData-methods
+setMethod(f = "neighbourIDs",
+          signature = "SPData",
+          def = function(object) object@nn.ids)
 
-#' Returns the 2-D coordinates of the cell
-#'
-#' @export
-setMethod("xy", "SPData", function(object) object@pos)
+#' @rdname xy-methods
+#' @aliases xy,SPData-methods
+setMethod(f = "xy",
+          signature = "SPData",
+          def = function(object) object@pos)
 
+#' @rdname xy-methods
+#' @aliases xy<-,SPData-methods
+#' @name xy<-
+setReplaceMethod(f = "xy",
+                 signature="SPData",
+                 function(object, value) object@pos <- xy)
 
 
 
@@ -173,26 +213,7 @@ setValidity("SPData", function(object) {
 
 })
 
-#' Sets the cell by cell measurements
-#'
-#' @name cells<-
-#' @export
-setReplaceMethod("cells", signature = "SPData",
-                 function(object, value) {
-                     object@readouts <- value
-                     validObject(object)
-                     return(object)
-                 })
 
-#' Sets the neighbour measurements
-#'
-#' @name neighbours<-
-setReplaceMethod("neighbours", signature = "SPData",
-                 function(object, value) {
-                     object@cellNeighbours <- value
-                     validObject(object)
-                     return(object)
-                 })
 
 
 #' Subset an SPData set

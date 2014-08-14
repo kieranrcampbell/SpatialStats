@@ -6,7 +6,7 @@
 #######################
 
 
-#' Cell measurement matrix
+#' Cell measurement data
 #'
 #' Returns the n by p matrix of normalised cell measurements for
 #' n cells and p channels.
@@ -19,6 +19,18 @@
 setGeneric(name = "cells",
            def = function(object) standardGeneric("cells"))
 
+#' Cell measurement data
+#'
+#' Set the cell measurements for a given sample.
+#'
+#' @param value The new cell measurements.
+#'
+#' @name cells<-
+#' @rdname cells-methods
+#' @exportMethod cells<-
+setGeneric(name = "cells<-",
+           def = function(object, value) standardGeneric("cells<-"))
+
 #' Raw data matrix
 #'
 #' Returns the n by p matrix of raw measurements for n cells
@@ -27,7 +39,7 @@ setGeneric(name = "cells",
 #' @param object The SPData object to use
 #'
 #' @name rawData
-#' @rdname rawData-methods
+#' @rdname raw-methods
 #' @exportMethod rawData
 setGeneric(name = "rawData",
            def = function(object) standardGeneric("rawData"))
@@ -53,7 +65,7 @@ setGeneric(name = "nCells",
 #' @rdname nChannel-methods
 #' @exportMethod nChannel
 setGeneric(name = "nChannel",
-           definition = function(object) standardGeneric("nChannel"))
+           def = function(object) standardGeneric("nChannel"))
 
 #' Channel names used in the sample
 #'
@@ -67,7 +79,7 @@ setGeneric(name = "nChannel",
 #' @rdname channels-methods
 #' @exportMethod channels
 setGeneric(name = "channels",
-           definition = function(object) standardGeneric("channels"))
+           def = function(object) standardGeneric("channels"))
 
 #' List of nearest neighbour readouts
 #'
@@ -81,7 +93,19 @@ setGeneric(name = "channels",
 #' @rdname neighbours-methods
 #' @exportMethod neighbours
 setGeneric(name = "neighbours",
-           definition = function(object) standardGeneric("neighbours"))
+           def = function(object) standardGeneric("neighbours"))
+
+#' List of nearest neighbour readouts
+#'
+#' Set the list of nearest neighbour readouts.
+#'
+#' @param value The new list of nearest neighbour readouts
+#'
+#' @name neighbours<-
+#' @rdname neighbours-methods
+#' @exportMethod neighbours<-
+setGeneric(name = "neighbours<-",
+           def = function(object, value) standardGeneric("neighbours<-"))
 
 #' Cell sizes
 #'
@@ -93,7 +117,7 @@ setGeneric(name = "neighbours",
 #' @rdname size-methods
 #' @exportMethod size
 setGeneric(name = "size",
-           definition = function(object) standardGeneric("size"))
+           def = function(object) standardGeneric("size"))
 
 #' Boundary weights
 #'
@@ -104,9 +128,10 @@ setGeneric(name = "size",
 #' @name weight
 #' @rdname weight-methods
 #' @exportMethod weight
-setGeneric("weight", function(object) standardGeneric("weight"))
+setGeneric(name = "weight",
+           def = function(object) standardGeneric("weight"))
 
-#' Set the boundary weights
+#' Boundary weights
 #'
 #' Set the boundary weights.
 #'
@@ -114,25 +139,65 @@ setGeneric("weight", function(object) standardGeneric("weight"))
 #' @param value A list of length nCells(object) of neighbour weights.
 #'
 #' @name weight<-
-#' @rdname w-methods
+#' @rdname weight-methods
 #' @exportMethod weight<-
-setGeneric("weight<-", function(object, value) standardGeneric("weight<-"))
+setGeneric(name = "weight<-",
+           def = function(object, value) standardGeneric("weight<-"))
 
-setGeneric("cells<-", function(object, value) standardGeneric("cells<-"))
+#' Get and set the sample ID
+#'
+#' Get the sample ID.
+#' @param object The SPData object for which to set the ID.
+#' @name ID
+#' @rdname id-methods
+#' @exportMethod ID
+setGeneric(name = "ID",
+           def = function(object) standardGeneric("ID"))
 
-setGeneric("neighbours<-", function(object, value) standardGeneric("neighbours<-"))
+#' Get and set the sample ID
+#'
+#' Set the sample ID.
+#'
+#' @name ID<-
+#' @rdname id-methods
+#' @exportMethod ID<-
+setGeneric(name = "ID<-",
+           def = function(object, value) standardGeneric("ID<-"))
 
-setGeneric("ID", function(object) standardGeneric("ID"))
+#' Nearest neighbour IDs
+#'
+#' A list of length \emph{n} for \emph{n} cells, where the \emph{i}th
+#' entry is a vector of length \emph{m} that holds the IDs of the nearest
+#' neighbour cells of cell \emph{i}, if cell \emph{i} has \emph{m} nearest
+#' neighbours.
+#'
+#' @name neighbourIDs
+#' @rdname neighbourid-methods
+#' @exportMethod neighbourIDs
+setGeneric(name = "neighbourIDs",
+           def = function(object) standardGeneric("neighbourIDs"))
 
-setGeneric("ID<-", function(object, value) standardGeneric("ID<-"))
+#' 2D cell coordinates
+#'
+#' A matrix of size \emph{n} by 2, for \emph{n} cells. The first
+#' column is the \emph{x} coordinate in the tissue, and the
+#' second is the \emph{y}.
+#'
+#' @param object The SPData object from which to retrieve ethe coordinates
+#' @rdname xy-methods
+#' @exportMethod xy
+setGeneric(name = "xy",
+           def = function(object) standardGeneric("xy"))
 
-setGeneric("neighbourIDs", function(object) standardGeneric("neighbourIDs"))
-
-
-
-setGeneric("xy", function(object) standardGeneric("xy"))
-
-setGeneric("xy<-", function(object, value) standardGeneric("xy<-"))
+#' 2D cell coordinates
+#'
+#' Set the cell coordinates.
+#'
+#' @name xy<-
+#' @rdname xy-methods
+#' @exportMethod xy<-
+setGeneric(name = "xy<-",
+           def = function(object, value) standardGeneric("xy<-"))
 
 ########################
 ## Plotting functions ##
