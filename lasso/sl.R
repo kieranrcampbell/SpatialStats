@@ -159,6 +159,8 @@ pathways.nowe <- findOverlap(noWeights, remove="different")
 
 pw.same <- findOverlap(noWeights, remove="same")
 
+print(pathways.with)
+print(pathways.nowe)
 
 ## statistical power calculation
 

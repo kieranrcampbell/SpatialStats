@@ -1,15 +1,24 @@
 ################################################
-## spatialpro R class                         ##
+## SpatialPRo R class                         ##
+## kieran.campbell@dpag.ox.ac.uk              ##
 ## Data container for spatial proteomics data ##
-## kieran.campbell@sjc.ox.ac.uk               ##
 ################################################
 
-#' Class containing spatial proteomics data
+#' Class SPdata
 #'
-#' @export
-SPData <- setClass("SPData",
+#' Class \code{SPData} defines a spatial proteomics sample. It
+#' stores a sample (e.g. a tissue microarray) of a given
+#' tissue as single cell proteomics data. It contains
+#' cell measurements, size and classification.
+#'
+#' @name SPData-class
+#' @rdname SPData-class
+#' @aliases SPData
+#'
+#' @exportClass SPData
+SPData <- setClass(Class = "SPData",
                    representation = list(channelNames = "character",
-                       readouts = "matrix", ## +min + loess & N(0,1) normalised
+                       readouts = "matrix", ## +min
                        raw = "matrix", ## + min + log
                        cellNeighbours = "list",
                        nn.ids = "list",
@@ -19,52 +28,58 @@ SPData <- setClass("SPData",
                        pos = "matrix", # nCell by 2 matrix of cell locations
                        cellClass = "numeric"))
 
-#' Extracts the cell proteomics data
-#' @export
-setMethod("cells", "SPData", function(object) object@readouts )
+#' @rdname cells-methods
+#' @aliases cells,SPData-methods
+setMethod(f = "cells",
+          signature = "SPData",
+          definition = function(object) object@readouts )
 
-#' Extract the raw (logged) data
-#' @export
-setMethod("rawData", "SPData", function(object) object@raw)
+#' @rdname rawData-methods
+#' @aliases rawData,SPData-methods
+setMethod(f = "rawData",
+          signature = "SPData",
+          definition = function(object) object@raw)
 
-#' Returns the number of cells in the sample
-#' @export
-setMethod("nCells", "SPData", function(object) dim(object@raw)[1] )
+#' @rdname nCells-methods
+#' @aliases nCells,SPData-methods
+setMethod(f = "nCells",
+          signature = "SPData",
+          definition = function(object) dim(object@raw)[1] )
 
-#' Returns the number of proteins measured (number of channels)
-#' @export
-setMethod("nChannel", "SPData", function(object) dim(object@readouts)[2] )
+#' @rdname nChannel-methods
+#' @aliases nChannel,SPData-methods
+setMethod(f = "nChannel",
+          signature = "SPData",
+          definition = function(object) dim(object@readouts)[2] )
 
-#' Returns the names of the proteins measured
-#' @export
-setMethod("channels", "SPData", function(object) object@channelNames )
+#' @rdname channels-methods
+#' @aliases channels,SPData-methods
+setMethod(f = "channels",
+          signature = "SPData",
+          definition = function(object) object@channelNames )
 
-#' Returns a list of nearest neighbour readouts
-#'
-#' The ith entry is an n by m matrix, for cell i having n neighbours
-#' each of which have m channels
-#' @export
-setMethod("neighbours", "SPData", function(object) {
-    #nn <- lapply(object@nn.ids, function(nn.id) { object@readouts[nn.id,] })
-    #return(nn)
+#' @rdname neighbours-methods
+#' @aliases neighbours,SPData-methods
+setMethod(f = "neighbours",
+          signature = "SPData",
+          definition = function(object) {
     object@cellNeighbours
 })
 
-#' Returns the cell sizes
-#'
-#' The ith entry is the size of the ith cell, as ordered by cells(X)
-#' @export
-setMethod("size", "SPData", function(object) object@size)
+#' @rdname size-methods
+#' @aliases size,SPData-methods
+setMethod(f = "size",
+          signature = "SPData",
+          definition = function(object) object@size)
 
-#' Returns a list of nearest neighbour boundary sizes (weights)
-#'
-#' @export
-setMethod("weight", "SPData", function(object) object@weights)
+#' @rdname weight-methods
+#' @aliases size,SPData-methods
+setMethod(f = "weight",
+          signature = "SPData",
+          definition = function(object) object@weights)
 
-#' Sets the boundary weights
-#'
-#' @name weight<-
-#' @export
+#' @rdname w-methods
+#' @aliases weight<-,SPData-methods
 setReplaceMethod("weight", signature="SPData",
                  function(object, value) {
                      object@weights <- value
@@ -226,8 +241,9 @@ setMethod("[", "SPData", function(x, i, j) {
 #' @param useWeights If TRUE then nearest neighbours are weighted by cell boundary size
 #' @param normalise If TRUE then then each channel is normalised to mean 0 sd 1
 #'
+#'
 #' @export
-setMethod("neighbourMean", signature("SPData", "logical", "logical"),
+setMethod(f = "neighbourMean", signature("SPData", "logical", "logical"),
           function(object, useWeights, normalise) {
               #if(missing(useWeights)) useWeights <- FALSE
               #if(missing(normalise)) normalise <- TRUE
@@ -331,8 +347,9 @@ neighbourChannel <- function(NN, channel.ids) {
 #' (currently only implemented for 2 classes)
 #'
 #' @export
-setMethod("findBoundary", signature("SPData"),
-          function(object) {
+setMethod(f = "findBoundary",
+          signature = signature("SPData"),
+          definition = function(object) {
               classes <- cellClass(object)
               cl1 <- which(classes == 1) ; cl2 <- which(classes == 2)
               nn.ids <- neighbourIDs(object)
@@ -346,11 +363,11 @@ setMethod("findBoundary", signature("SPData"),
                   nn.id <- nn.ids[[cellid]]
                   any(nn.id %in% cl1)
               })
-
               boundary <- sort(c(cl1[cell1neighbours], cl2[cell2neighbours]))
           })
 
 #################################################
+
 ## plotting & Visualisation methods start here ##
 #################################################
 

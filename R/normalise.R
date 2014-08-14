@@ -8,11 +8,12 @@
 #' @export
 normaliseSP <- function(sp) {
     raw <- rawData(sp)
-    raw <- preprocess.centre(raw, cellClass(sp))
 
     Y <- lmNormalise(raw, size(sp), cellClass(sp), FALSE)
 
     Y <- totalProteinNormalise(Y, cell.classes=cellClass(sp))
+
+    Y <- preprocess.centre(Y, cellClass(sp))
 
     X <- lapply(neighbourIDs(sp), function(id) {
         Y[id,]
