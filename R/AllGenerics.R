@@ -177,7 +177,7 @@ setGeneric(name = "ID<-",
 setGeneric(name = "neighbourIDs",
            def = function(object) standardGeneric("neighbourIDs"))
 
-#' 2D cell coordinates
+#' 2D Cell Coordinates
 #'
 #' A matrix of size \emph{n} by 2, for \emph{n} cells. The first
 #' column is the \emph{x} coordinate in the tissue, and the
@@ -189,7 +189,7 @@ setGeneric(name = "neighbourIDs",
 setGeneric(name = "xy",
            def = function(object) standardGeneric("xy"))
 
-#' 2D cell coordinates
+#' 2D Cell Coordinates
 #'
 #' Set the cell coordinates.
 #'
@@ -199,33 +199,78 @@ setGeneric(name = "xy",
 setGeneric(name = "xy<-",
            def = function(object, value) standardGeneric("xy<-"))
 
-########################
-## Plotting functions ##
-########################
 
-setGeneric("boxplots", function(object, nrow, ncol) standardGeneric("boxplots"))
+#################################
+## Class and neighbour methods ##
+#################################
 
-setGeneric("channelPlot", function(object, channel.ids) standardGeneric("channelPlot"))
+#' Average over nearest neighbours
+#'
+#' Given the nearest neighbour measurements, average over the
+#' nearest neighbours of each cell, with optional boundary
+#' weights.
+#'
+#' @param object The SPData object to use
+#' @param useWeights If TRUE then the mean is weighted using the
+#' relative boundary weights. If FALSE then the normal mean is taken
+#' over the nearest neighbours.
+#' @param normalise If TRUE each channel is centre-scaled to mean 0
+#' and standard deviation 1.
+#'
+#' @return A matrix of dimension \emph{n} by \emph{p} for
+#' \emph{n} cells and \emph{p} nearest neighbours.
+#' @rdname neighbourmean-methods
+#' @exportMethod neighbourMean
+setGeneric(name = "neighbourMean",
+           def = function(object, useWeights, normalise)
+           standardGeneric("neighbourMean"))
 
-#####################################
-## Boundary / cell class functions ##
-#####################################
+#' Classes of each cell
+#'
+#' If cells within a given tissue have been classified into different
+#' types then get/set the classes.
+#'
+#' @param object The SPData object to use
+#'
+#' @return A numeric vector of cell classes
+#' @rdname cellclass-methods
+#' @exportMethod cellClass
+setGeneric(name = "cellClass",
+           def = function(object) standardGeneric("cellClass"))
 
-setGeneric("cellClass", function(object) standardGeneric("cellClass"))
+#' Classes of each cell
+#'
+#' @rdname cellclass-methods
+#' @name cellClass<-
+#' @exportMethod cellClass<-
+setGeneric(name = "cellClass<-",
+           def = function(object, value) standardGeneric("cellClass<-"))
 
-setGeneric("cellClass<-", function(object, value) standardGeneric("cellClass<-"))
+#' Nearest neighbours of a certain class
+#'
+#' Filter out nearest neighbours by cell class. If cell \emph{i} has no
+#' nearest neighbours of class \code{cell.class} then \code{numeric(0)} is returned.
+#'
+#' @param object The SPData object to use
+#' @param cell.class The cell class to filter out
+#'
+#' @return A list of length \code{nCell(object)} where all nearest
+#' neighbour cells other than of type \code{cell.class} have been removed.
+#' @rdname neighbourclass-methods
+#' @exportMethod neighbourClass
+setGeneric(name = "neighbourClass",
+           def = function(object, cell.class)
+           standardGeneric("neighbourClass"))
 
-setGeneric("neighbourClass", function(object, cell.class) standardGeneric("neighbourClass"))
 
-setGeneric("findBoundary", function(object) standardGeneric("findBoundary"))
 
-###########################################
-## Nearest neighbour averaging functions ##
-###########################################
 
-setGeneric("neighbourMean", function(object, useWeights, normalise) standardGeneric("neighbourMean"))
 
-## For SPExp
+
+
+####################
+## SPExp generics ##
+####################
 
 setGeneric("getDir", function(object) standardGeneric("getDir"))
 

@@ -1,0 +1,18 @@
+\name{findBoundary}
+\alias{findBoundary}
+\title{Cells on a class boundary}
+\usage{
+findBoundary(sp)
+}
+\arguments{
+  \item{sp}{The SPData object to use}
+}
+\value{
+A vector of cell identifiers relating to those that lie
+along the boundary
+}
+\description{
+Find the cells that lie on the boundary between two classes
+(currently only implemented for 2 classes)
+}
+

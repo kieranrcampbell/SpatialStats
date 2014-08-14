@@ -1,0 +1,12 @@
+\docType{class}
+\name{SPData-class}
+\alias{SPData}
+\alias{SPData-class}
+\title{Class SPdata}
+\description{
+Class \code{SPData} defines a spatial proteomics sample. It
+stores a sample (e.g. a tissue microarray) of a given
+tissue as single cell proteomics data. It contains cell
+measurements, size and classification.
+}
+

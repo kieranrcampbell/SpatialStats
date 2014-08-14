@@ -167,7 +167,8 @@ setReplaceMethod(f = "xy",
 setMethod("show", "SPData", function(object) {
     cat("An object of class ", class(object), "\n",sep="")
     if(ID(object) > -1) cat(" Sample ID: ", ID(object), "\n", sep="")
-    cat(" ", nCells(object), " cells with ", nChannel(object), " channel(s)\n", sep="")
+    cat(" ", nCells(object), " cells with ",
+        nChannel(object), " channel(s)\n", sep="")
     invisible(NULL)
 
 })
@@ -214,11 +215,20 @@ setValidity("SPData", function(object) {
 })
 
 
-
-
 #' Subset an SPData set
 #'
-#' Select SPData[i,j] for cells i and channels j.
+#' Select SPData[i,j] for cells \code{i} and channels \code{j}.
+#' Note that this does not subset out nearest neighbours also.
+#'
+#' @param i Cells to subset
+#' @param j Channels to subset
+#' @name [
+#'
+#' @return An SPData object reduced to cells \code{i} and channels \code{j}
+#'
+#' @aliases [,SPData-methods
+#' @rdname extract-methods
+#'
 #' @export
 setMethod("[", "SPData", function(x, i, j) {
     if(missing(j)) j <- 1:nChannel(x)
@@ -251,21 +261,15 @@ setMethod("[", "SPData", function(x, i, j) {
            raw = .raw, cellClass = .cell.class, pos=.pos)
 })
 
+###########################################
+## Methods for neighbours and cell class ##
+###########################################
 
-#############################################
-## Methods for nearest neighbour averaging ##
-#############################################
-
-#' Averages over the nearest neighbour cells, going from a
-#' list of length cell to a cell by channel matrix
-#'
-#' @param useWeights If TRUE then nearest neighbours are weighted by cell boundary size
-#' @param normalise If TRUE then then each channel is normalised to mean 0 sd 1
-#'
-#'
-#' @export
-setMethod(f = "neighbourMean", signature("SPData", "logical", "logical"),
-          function(object, useWeights, normalise) {
+#' @rdname neighbourmean-methods
+#' @aliases neighbourMean,SPData-methods
+setMethod(f = "neighbourMean",
+          signature = signature("SPData", "logical", "logical"),
+          def = function(object, useWeights, normalise) {
               #if(missing(useWeights)) useWeights <- FALSE
               #if(missing(normalise)) normalise <- TRUE
 
@@ -302,32 +306,21 @@ setMethod(f = "neighbourMean", signature("SPData", "logical", "logical"),
           })
 
 
-###########################################
-## Methods for dealing with cell class & ##
-##     boundaries start here             ##
-###########################################
-
-
-#' If each cell has a class (e.g. tumour or stromal) then it can be
-#' assigned a numeric class which is retrieved through cellClass
-#'
-#' @export
+#' @rdname cellclass-methods
+#' @aliases cellClass,SPData-methods
 setMethod("cellClass", signature="SPData", function(object) object@cellClass)
 
-#' Sets the cell class
-#'
 #' @name cellClass<-
-#' @export
+#' @rdname cellclass-methods
+#' @aliases cellClass<-,SPData-methods
 setReplaceMethod("cellClass", signature="SPData",
                  function(object, value) {
                      object@cellClass <- value
                      return(object)
                  })
 
-#' Filter out nearest neighbours by cell class. If cell i has no
-#' nearest neighbours of class cell.class then numeric(0) is returned.
-#'
-#' @export
+#' @rdname neighbourclass-methods
+#' @aliases neighbourClass,SPData-methods
 setMethod("neighbourClass", signature("SPData","numeric"),
           function(object, cell.class) {
               X <- neighbours(sp)
@@ -364,176 +357,35 @@ neighbourChannel <- function(NN, channel.ids) {
     nn
 }
 
+#' Cells on a class boundary
+#'
 #' Find the cells that lie on the boundary between two classes
 #' (currently only implemented for 2 classes)
 #'
-#' @export
-setMethod(f = "findBoundary",
-          signature = signature("SPData"),
-          definition = function(object) {
-              classes <- cellClass(object)
-              cl1 <- which(classes == 1) ; cl2 <- which(classes == 2)
-              nn.ids <- neighbourIDs(object)
-
-              cell1neighbours <- sapply(cl1, function(cellid) {
-                  nn.id <- nn.ids[[cellid]]
-                  any(nn.id %in% cl2)
-              })
-
-              cell2neighbours <- sapply(cl2, function(cellid) {
-                  nn.id <- nn.ids[[cellid]]
-                  any(nn.id %in% cl1)
-              })
-              boundary <- sort(c(cl1[cell1neighbours], cl2[cell2neighbours]))
-          })
-
-#################################################
-
-## plotting & Visualisation methods start here ##
-#################################################
-
-#' Boxplots the distribution for each channel
+#' @param sp The SPData object to use
 #'
-#' @param nrow Number of rows of the boxplots to plot
-#' @param ncol Number of columns of boxplots to plot
+#' @return A vector of cell identifiers relating to those
+#' that lie along the boundary
 #'
 #' @export
-setMethod("boxplots", signature("SPData", "numeric", "numeric"),
-          function(object, nrow, ncol) {
-              readouts <- cells(object)
-              read.boundaries <- quantile(readouts, probs=c(0.01, 0.99))
-              if(nrow * ncol > nChannel(object)) {
-                  print("Not enough channels to boxplot")
-                  return(NULL)
-              } else {
-                  par(mfrow=c(nrow,ncol), mar=c(1.8,1.8,1.8,1.8))
-                  for(i in 1:(nrow*ncol)) {
-                      boxplot(readouts[,i], ylim=read.boundaries,
-                              main=channels(object)[i])
-                  }
-              }
-          })
+findBoundary <- function(sp) {
+    classes <- cellClass(sp)
+    cl1 <- which(classes == 1) ; cl2 <- which(classes == 2)
+    nn.ids <- neighbourIDs(sp)
 
-#' Boxplots the distributions of channels depending on their class
-#'
-#' @param channel.ids A numeric vector of channel indicies
-#' @export
-setMethod("channelPlot", signature("SPData", "numeric"),
-          function(object, channel.ids) {
-              require(ggplot2)
-              require(reshape)
-              readouts <- cells(object)
-              classes <- as.factor(cellClass(object))
-              readouts <- readouts[,channel.ids]
-              colnames(readouts) <- channels(object)[channel.ids]
-              readouts.melted <- melt(readouts)
-              plotdf <- data.frame(exprs=readouts.melted$value,
-                                   channel=readouts.melted$X2,
-                                   cell.class = rep(classes,length(channel.ids)))
-              ggplot(aes(x=channel,y=exprs,fill=cell.class), data=plotdf) + geom_boxplot() +
-                  theme_bw() + theme(axis.text.x = element_text(angle=90, hjust=1))
-          })
-
-#' Correlation plot of channels within the sample
-#'
-#' @export
-channelCorr <- function(sp, cell.class=NULL) {
-    require(corrplot)
-    Y <- cells(sp)
-    if(!is.null(cell.class)) {
-        Y <- Y[cellClass(sp) == cell.class,]
-    }
-    corr.y <- cor(Y)
-    corrplot(corr.y)
-}
-
-#' Correlation plot of channels with neighbours
-#'
-#' @export
-neighbourCorr <- function(sp, cell.class=NULL) {
-    require(corrplot)
-    Y <- cells(sp) ; X <- neighbourMean(sp, TRUE, TRUE)
-    if(!is.null(cell.class)) {
-        Y <- Y[cellClass(sp) == cell.class,]
-        X <- X[cellClass(sp) == cell.class,]
-    }
-    xy.corr <- cor(X,Y)
-    corrplot(xy.corr)
-}
-
-
-#######################################
-## Methods for importing from matlab ##
-## files start here                  ##
-#######################################
-
-
-#' Loads an Xell matlab file into the SPData format
-#'
-#' This function parses the matlab files, pulling out relevant proteins
-#' in the 'D' channel and validates that the correct proteins are present. Matlab
-#' files can be found at
-#' https://s3.amazonaws.com/supplemental.cytobank.org/report_data/report_113/Figure_5/Figure_5_raw_image_files.zip
-#'
-#' @param filename The matlab file
-#' @param control.isotopes The isotopes used for control to exclude from analysis
-#' @param log.data Boolean of whether to log the data
-#' @export
-loadCells <- function(filename, id=-1, control.isotopes = c("Xe131","Cs133","Ir193")) {
-    require(R.matlab)
-
-    ## loads relevant data from matlab and parses into list
-
-    m <- readMat(filename)
-
-    n.cells <- dim(m$Xell)[1]
-    n.channels <- -1
-
-
-    ycolheads <- as.character(m$Xell.list.col)
-    yp.id <- grep(")D", ycolheads)
-    yp.id <- setdiff(yp.id, grep(paste(control.isotopes, collapse="|"),ycolheads))
-    channelNames <- ycolheads[yp.id]
-
-    Y <- m$Xell.list
-    Y <- Y[,yp.id]
-
-    colnames(Y) <- channelNames
-
-    ## add minimum to make all values positive
-    Y <- preprocess.addmin(Y)
-
-    ## fork off 'raw' that this point
-    raw <- Y # log(Y)
-
-    ## want to LOESS normalise against cell size
-    sizes <- as.numeric(m$Xell.size)
-    ##Y <- loessNormalise(Y, sizes)
-    ##Y <- totalProteinNormalise(Y)
-
-
-    ## now on to constructing X, the nearest neighbour matrix
-    ## nnids list of nearest neighbour IDs
-    nnids <- lapply(m$Xell.nearest, function(xl) {
-        if(is.matrix(xl)) {
-            return ( xl[,1] )
-        } else {
-            xl[1]
-        }
+    cell1neighbours <- sapply(cl1, function(cellid) {
+        nn.id <- nn.ids[[cellid]]
+        any(nn.id %in% cl2)
     })
 
-
-    sp <- SPData(channelNames=channelNames,
-                 readouts=matrix(0), raw=raw, cellNeighbours=list(0),
-                 size=sizes,id=id, weights=list(0), pos=matrix(0), cellClass=-1,
-                 nn.ids=nnids)
-    return( sp )
+    cell2neighbours <- sapply(cl2, function(cellid) {
+        nn.id <- nn.ids[[cellid]]
+        any(nn.id %in% cl1)
+    })
+    boundary <- sort(c(cl1[cell1neighbours], cl2[cell2neighbours]))
 }
 
-preprocess.addmin <- function(Y) {
-    mu.bg <- -min(Y)
-    Y <- Y + mu.bg + 1
-}
+
 
 
 

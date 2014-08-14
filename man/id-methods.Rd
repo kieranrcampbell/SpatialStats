@@ -1,0 +1,24 @@
+\docType{methods}
+\name{ID}
+\alias{ID}
+\alias{ID,SPData-method}
+\alias{ID,SPData-methods}
+\alias{ID<-}
+\alias{ID<-,SPData-methods}
+\title{Get and set the sample ID}
+\usage{
+ID(object)
+
+ID(object) <- value
+
+\S4method{ID}{SPData}(object)
+}
+\arguments{
+  \item{object}{The SPData object for which to set the ID.}
+}
+\description{
+Get the sample ID.
+
+Set the sample ID.
+}
+

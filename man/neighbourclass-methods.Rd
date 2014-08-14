@@ -1,0 +1,27 @@
+\docType{methods}
+\name{neighbourClass}
+\alias{neighbourClass}
+\alias{neighbourClass,SPData,numeric-method}
+\alias{neighbourClass,SPData-methods}
+\title{Nearest neighbours of a certain class}
+\usage{
+neighbourClass(object, cell.class)
+
+\S4method{neighbourClass}{SPData,numeric}(object, cell.class)
+}
+\arguments{
+  \item{object}{The SPData object to use}
+
+  \item{cell.class}{The cell class to filter out}
+}
+\value{
+A list of length \code{nCell(object)} where all nearest
+neighbour cells other than of type \code{cell.class} have
+been removed.
+}
+\description{
+Filter out nearest neighbours by cell class. If cell
+\emph{i} has no nearest neighbours of class
+\code{cell.class} then \code{numeric(0)} is returned.
+}
+

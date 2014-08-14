@@ -1,0 +1,14 @@
+\name{channelPlot}
+\alias{channelPlot}
+\title{Boxplots the distributions of channels depending on their class}
+\usage{
+channelPlot(object, channel.ids)
+}
+\arguments{
+  \item{channel.ids}{A numeric vector of channel indicies}
+}
+\description{
+Boxplots the distributions of channels depending on their
+class
+}
+

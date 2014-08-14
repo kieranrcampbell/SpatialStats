@@ -1,0 +1,21 @@
+\docType{methods}
+\name{channels}
+\alias{channels}
+\alias{channels,SPData-method}
+\alias{channels,SPData-methods}
+\title{Channel names used in the sample}
+\usage{
+channels(object)
+
+\S4method{channels}{SPData}(object)
+}
+\arguments{
+  \item{object}{The SPData object to use}
+}
+\description{
+Returns the names of the channels used in the experiment.
+This can be the (abbreviated) names of proteins and protein
+modifications, or whatever else was measured in a given
+experiment.
+}
+

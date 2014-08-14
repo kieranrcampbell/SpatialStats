@@ -1,0 +1,18 @@
+\docType{methods}
+\name{neighbourIDs}
+\alias{neighbourIDs}
+\alias{neighbourIDs,SPData-method}
+\alias{neighbourIDs,SPData-methods}
+\title{Nearest neighbour IDs}
+\usage{
+neighbourIDs(object)
+
+\S4method{neighbourIDs}{SPData}(object)
+}
+\description{
+A list of length \emph{n} for \emph{n} cells, where the
+\emph{i}th entry is a vector of length \emph{m} that holds
+the IDs of the nearest neighbour cells of cell \emph{i}, if
+cell \emph{i} has \emph{m} nearest neighbours.
+}
+

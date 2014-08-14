@@ -1,0 +1,30 @@
+\docType{methods}
+\name{weight}
+\alias{weight}
+\alias{weight,SPData-method}
+\alias{weight,SPData-methods}
+\alias{weight<-}
+\alias{weight<-,SPData-methods}
+\title{Boundary weights}
+\usage{
+weight(object)
+
+weight(object) <- value
+
+\S4method{weight}{SPData}(object)
+}
+\arguments{
+  \item{object}{The SPData object in which to set the
+  weights}
+
+  \item{value}{A list of length nCells(object) of neighbour
+  weights.}
+}
+\description{
+Returns a list of boundary weights. The \emph{i}th item
+will be a vector of length \emph{n} if cell \emph{i} has
+\emph{n} nearest neighbours.
+
+Set the boundary weights.
+}
+

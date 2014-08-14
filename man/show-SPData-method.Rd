@@ -1,0 +1,14 @@
+\docType{methods}
+\name{show,SPData-method}
+\alias{show,SPData-method}
+\title{Default show call}
+\usage{
+\S4method{show}{SPData}(object)
+}
+\arguments{
+  \item{object}{Any R object}
+}
+\description{
+Default show call
+}
+

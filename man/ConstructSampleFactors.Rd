@@ -1,0 +1,17 @@
+\name{ConstructSampleFactors}
+\alias{ConstructSampleFactors}
+\title{Construct model matrix for integrating multiple samples}
+\usage{
+ConstructSampleFactors(XY, sample.ids)
+}
+\arguments{
+  \item{XY}{Output of BindSPE}
+}
+\description{
+Given the output of the function BindSPE we would like to
+control for biases introduced by binning all the data
+together. ConstructSampleFactors takes the output of
+BindSPE and returns a model matrix of factors highlighting
+what sample a given cell is from
+}
+
