@@ -1,0 +1,19 @@
+\docType{methods}
+\name{SPlist}
+\alias{SPlist}
+\alias{SPlist,SPExp-method}
+\alias{SPlist,SPExp-methods}
+\title{Underlying list of SPData}
+\usage{
+SPlist(object)
+
+\S4method{SPlist}{SPExp}(object)
+}
+\arguments{
+  \item{object}{The instance of SPExp to use}
+}
+\description{
+Accesses the list contained within a \code{SPExp} object,
+of class \code{SPData}
+}
+

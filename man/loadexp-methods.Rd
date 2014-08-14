@@ -1,0 +1,23 @@
+\docType{methods}
+\name{loadExp}
+\alias{loadExp}
+\alias{loadExp,SPExp-method}
+\alias{loadExp,SPExp-methods}
+\title{Load an experiment}
+\usage{
+loadExp(object)
+
+\S4method{loadExp}{SPExp}(object)
+}
+\arguments{
+  \item{object}{The instance of SPExp to use}
+}
+\value{
+A \code{SPExp} object loaded from \code{getDir(SPExp)}
+}
+\description{
+Provided the directory and file information exists, this
+function calls \code{\link{loadCells}} on the files and
+creates an SPData object.
+}
+

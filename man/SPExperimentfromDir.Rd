@@ -11,6 +11,10 @@ SPExperimentfromDir(directory, files = NULL)
   \item{files}{The filenames to load. Default is NULL, in
   which case all files in the directory are used}
 }
+\value{
+A \code{SPExp} object created from the experiment
+directory.
+}
 \description{
 Load an experiment from cytobank in matlab format
 }

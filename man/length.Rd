@@ -1,6 +1,6 @@
 \docType{methods}
-\name{length,SPExp-method}
-\alias{length,SPExp-method}
+\name{length}
+\alias{length}
 \title{Number of samples}
 \usage{
 \S4method{length}{SPExp}(x)

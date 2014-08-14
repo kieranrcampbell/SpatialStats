@@ -1,0 +1,19 @@
+\docType{methods}
+\name{getDir}
+\alias{getDir}
+\alias{getDir,SPExp-method}
+\alias{getDir,SPExp-methods}
+\title{Experiment directory}
+\usage{
+getDir(object)
+
+\S4method{getDir}{SPExp}(object)
+}
+\arguments{
+  \item{object}{The instance of SPExp to use}
+}
+\description{
+Returns the directory where the experiment files are
+located.
+}
+

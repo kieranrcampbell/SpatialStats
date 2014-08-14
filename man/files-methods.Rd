@@ -1,0 +1,19 @@
+\docType{methods}
+\name{files}
+\alias{files}
+\alias{files,SPExp-method}
+\alias{files,SPExp-methods}
+\title{File names}
+\usage{
+files(object)
+
+\S4method{files}{SPExp}(object)
+}
+\arguments{
+  \item{object}{The instance of SPExp to use}
+}
+\description{
+Returns a vector of filenames corresponding to the originam
+experiment files
+}
+

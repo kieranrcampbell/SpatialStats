@@ -1,0 +1,12 @@
+\docType{class}
+\name{SPExp-class}
+\alias{SPExp}
+\alias{SPExp-class}
+\title{Class SPExp}
+\description{
+Class \code{SPExp} defines an entire spatial proteomics
+experiment. It stores a list of the samples (of type
+\code{SPData}) as well as the original file names and
+directories.
+}
+

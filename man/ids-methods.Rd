@@ -1,0 +1,19 @@
+\docType{methods}
+\name{IDs}
+\alias{IDs}
+\alias{IDs,SPExp-method}
+\alias{IDs,SPExp-methods}
+\title{Sample IDs}
+\usage{
+IDs(object)
+
+\S4method{IDs}{SPExp}(object)
+}
+\arguments{
+  \item{object}{The instance of SPExp to use}
+}
+\description{
+Find the IDs of the samples contained within the
+\code{SPExp}
+}
+

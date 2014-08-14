@@ -272,12 +272,61 @@ setGeneric(name = "neighbourClass",
 ## SPExp generics ##
 ####################
 
-setGeneric("getDir", function(object) standardGeneric("getDir"))
+#' Experiment directory
+#'
+#' Returns the directory where the experiment files are located.
+#'
+#' @param object The instance of SPExp to use
+#'
+#' @rdname getdir-methods
+#' @exportMethod getDir
+setGeneric(name = "getDir",
+           def = function(object) standardGeneric("getDir"))
 
-setGeneric("files", function(object) standardGeneric("files"))
+#' File names
+#'
+#' Returns a vector of filenames corresponding to the originam experiment files
+#'
+#' @param object The instance of SPExp to use
+#'
+#' @rdname files-methods
+#' @exportMethod files
+setGeneric(name = "files",
+           def = function(object) standardGeneric("files"))
 
+#' Underlying list of SPData
+#'
+#' Accesses the list contained within a \code{SPExp} object, of
+#' class \code{SPData}
+#'
+#' @param object The instance of SPExp to use
+#'
+#' @rdname splist-methods
+#' @exportMethod SPlist
+setGeneric(name = "SPlist",
+           def = function(object) standardGeneric("SPlist"))
+
+#' Sample IDs
+#'
+#' Find the IDs of the samples contained within the \code{SPExp}
+#'
+#' @param object The instance of SPExp to use
+#'
+#' @rdname ids-methods
+#' @exportMethod IDs
+setGeneric(name = "IDs",
+           def = function(object) standardGeneric("IDs"))
+
+#' Load an experiment
+#'
+#' Provided the directory and file information exists, this function
+#' calls \code{\link{loadCells}} on the files and creates an SPData object.
+#'
+#' @param object The instance of SPExp to use
+#'
+#' @return A \code{SPExp} object loaded from \code{getDir(SPExp)}
+#'
+#' @rdname loadexp-methods
+#' @exportMethod loadExp
 setGeneric("loadExp", function(object) standardGeneric("loadExp"))
 
-setGeneric("SPlist", function(object) standardGeneric("SPlist"))
-
-setGeneric("IDs", function(object) standardGeneric("IDs"))
