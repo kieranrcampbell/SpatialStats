@@ -144,8 +144,8 @@ setMethod(f = "length",
           def = function(x) length(x@spdata))
 
 #' @export
-SPExperiment <- function(dir, files, spdata, ids) {
-    return ( new("SPExp", dir, files, spdata, ids) )
+SPExperiment <- function(dir, files, spdata) {
+  return ( new("SPExp", dir, files, spdata) )
 }
 
 #' Load an experiment from cytobank in matlab format

@@ -8,17 +8,22 @@ Y <- t(replicate(5, rpois(10,5), simplify=T))
 
 protein.names <- paste("prot", 1:nprot, sep="")
 
-X <- lapply(1:ncells, function(i) {
-    Y[sample(1:ncells, sample(2:4,1)),]
-
+nn.ids <- lapply(1:ncells, function(i) {
+  sample(1:ncells, sample(2:4,1))
 })
+
+X <- lapply(nn.ids, function(ids) {
+  Y[ids,]
+})
+
+cell.classes <- c(1,1:4)
 
 pos <- matrix(sample(1:10, ncells * 2, TRUE), ncol=2)
 
 sp <- SPData(channelNames=protein.names,
              readouts=Y,raw=Y, cellNeighbours=X,
              size=rep(1, ncells), id=sID, weights=list(0),
-             pos=pos, cellClass=-1)
+             pos=pos, cellClass=cell.classes, nn.ids = nn.ids)
 
 
 test_that("SPData is initialised properly", {
@@ -29,6 +34,31 @@ test_that("SPData is initialised properly", {
     expect_that(ID(sp), equals(sID))
     expect_that(channels(sp), equals(protein.names))
     expect_equal(pos, xy(sp))
+    expect_equal(neighbours(object = sp), neighbours(generateNeighbourfromID(sp)))
+})
+
+test_that("SPData subsets correctly", {
+  ## use neighbourChannel
+  cell.subset <- sample(1:nCells(sp), nCells(sp)/2)
+  channel.subset <- sample(1:nChannel(sp), nChannel(sp)/2)
+  expect_equal(Y[cell.subset,], cells(sp[cell.subset,]))
+  expect_equal(Y[,channel.subset], cells(sp[,channel.subset]))  
+  
+  ## nearest neighbours - does it subset by channel correctly?
+  X <- lapply(neighbours(sp), function(x) x[,channel.subset])
+  expect_equal(X, neighbourChannel(neighbours(sp), channel.subset))
+  
+  ## does it still work with single subsetting?
+  single.cell <- sample(1:nCells(sp), 1)
+  single.channel <- sample(1:nChannel(sp),1)
+  sp.cell <- sp[single.cell,]
+  sp.channel <- sp[,single.channel]
+})
+
+test_that("SPData cell class handling", {
+    expect_equal(cell.classes, cellClass(sp))   
+    ## neighbourClass 
+    
 })
 
 test_that("Nearest neighbour averages work", {

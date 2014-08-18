@@ -240,14 +240,15 @@ setMethod("[", "SPData", function(x, i, j) {
     .weight <- weight(x)[i]
     .nnid <- neighbourIDs(x)[i]
     .cell.class <- cellClass(x)[i]
-    .pos <- xy(x)
+    .pos <- xy(x)[i,]
 
-    .Y <- as.matrix(cells(x)[i,j])
-    .raw <- as.matrix(rawData(x)[i,j])
+    ## if dealing with single cell, .pos will become vector:
+    if(!is.matrix(.pos)) .pos <- t(as.matrix(.pos))
+    
+    .Y <- as.matrix(cells(x)[i,j, drop=FALSE])
+    .raw <- as.matrix(rawData(x)[i,j, drop=FALSE])
 
-    .X <- lapply(neighbours(x), function(nn.cells) {
-        if(is.matrix(nn.cells)) nn.cells[,j] else t(as.matrix(nn.cells[j]))
-    })
+    .X <- neighbourChannel(neighbours(sp), j)
 
     .X <- .X[i]
 
@@ -266,6 +267,7 @@ setMethod("[", "SPData", function(x, i, j) {
 ###########################################
 
 #' @rdname neighbourmean-methods
+#' @name neighbourMean
 #' @aliases neighbourMean,SPData-methods
 setMethod(f = "neighbourMean",
           signature = signature("SPData", "logical", "logical"),
@@ -342,20 +344,46 @@ setMethod("neighbourClass", signature("SPData","numeric"),
 
 #' Selects only particular channels to be returned as nearest neighbours
 #'
-#' @param NN Neighbour list (e.g. via neighbours(sp))
+#' @param NN The list of matrices of neighbour data (e.g. from \code{neighbours(sp)} )
 #' @param channel.ids A channel list to select out
 #'
 #' @export
 neighbourChannel <- function(NN, channel.ids) {
-    nn <- lapply(NN, function(Xi) {
-        if(is.matrix(Xi)) {
-            Xi[,channel.ids]
-        } else {
-            if(length(Xi) > 0) Xi[channel.ids] else numeric(0)
-        }
-    })
-    nn
+  ## the trick with this function is to make sure each element in the nearest neighbour
+  ## list arrives as a matrix and leaves as a matrix. R will reduce an
+  nn <- lapply(NN, function(Xi) {
+    if(!is.matrix(Xi)) {
+      if(is.na(Xi)) { 
+        return( NA ) 
+      } else {
+        stop("Dimensionality lost in neighbour subsetting")        
+      }
+    } else {
+      return( Xi[,channel.ids, drop = FALSE] )
+    }
+  })
+  return(nn)
 }
+
+#' Generate nearest neighbour data
+#' 
+#' Some processing may be performed on the cell-by-channel matrix and the nearest neighbour
+#' data needs updated. Note that the class architecture means that when the neighbours of a cell
+#' are requested, it is not generated fresh from the cell matrix but retreived from a separate copy 
+#' specifically for neighbour data. Therefore, if any transformations are applied to the neighbour
+#' data, you will need to regenerate them using this function.
+#' 
+#' @param sp The \code{SPData} object to use
+#' @return A \code{SPData} object with the neighbour data regenerated
+#' 
+#' @export
+generateNeighbourfromID <- function(sp) {
+  Y <- cells(sp)
+  X <- lapply(neighbourIDs(sp), function(id) Y[id, ])
+  neighbours(sp) <- X
+  return ( sp )
+}
+
 
 #' Cells on a class boundary
 #'

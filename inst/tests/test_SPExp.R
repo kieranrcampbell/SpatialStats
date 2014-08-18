@@ -22,12 +22,12 @@ sp <- SPData(channelNames=protein.names,
              size=rep(1, ncells), id=sID, weights=list(0),
              pos=pos, cellClass=-1)
 
-spe <- SPExperiment("dir","files",list(sp,sp,sp), ids=1:3)
+spe <- SPExperiment("dir","files",list(sp,sp,sp))
 
 test_that("SPExp is initialised properly", {
-    expect_equal(IDs(spe), 1:3)
     expect_equal(files(spe), "files")
     expect_equal(getDir(spe), "dir")
+    expect_equal(IDs(spe), rep(1,3))
 
     expect_true(all.equal(list(sp,sp,sp), SPlist(spe)))
 
