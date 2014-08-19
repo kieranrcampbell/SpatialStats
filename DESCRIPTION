@@ -1,5 +1,5 @@
-Package: SpatialPRo
-Title: Containers and methods for spacial proteomics data
+Package: SpatialStats
+Title: Statistics for spatially resolved proteomics data
 Description: First attempt at package
 Version: 0.1
 Author: Kieran Campbell
@@ -8,11 +8,8 @@ Copyright: 2014
 Depends:
     R (>= 3.0.2)
 Imports:
-    R.matlab,
-    ggplot2,
-    reshape,
-    corrplot,
     EMCluster,
-    glmnet
+    glmnet,
+    covTest
 LazyData: TRUE
 License: MIT
