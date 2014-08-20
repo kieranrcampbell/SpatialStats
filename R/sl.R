@@ -10,8 +10,6 @@ library(devtools)
 library(lars)
 library(covTest)
 
-load_all("..")
-source("hdimLasso.R")
 
 #' Cleans up results of the covariance test statistic and applies the
 #' bonferroni multiple testing correction for each response variable
@@ -98,9 +96,6 @@ doJointAnalysis <- function(SPE, useWeights=TRUE) {
 ## SPE.primary <- SPExperiment("None", "None", spdata=c(SPlist(SPE)[4], SPlist(SPE.bad)),
 ##                         ids = c(IDs(SPE)[4], IDs(SPE.bad)))
 
-## SPE <- SPE.primary
-
-load("../data/SPE_report.rda")
 
 findOverlap <- function(a.results, remove=c("same", "different")) {
     sr <- NULL
@@ -144,7 +139,8 @@ findOverlap <- function(a.results, remove=c("same", "different")) {
     pathways
 }
 
-set.seed(123)
+entire.project <- function() {
+  set.seed(123)
 
 SPE@spdata <- lapply(SPlist(SPE), normaliseSP)
 
@@ -186,3 +182,4 @@ nrow(x)
 
 rs1 <- sapply(s1, function(x) x$adj.r.squared)
 mrs1 <-  mean(rs1)
+}

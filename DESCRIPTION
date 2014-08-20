@@ -10,6 +10,6 @@ Depends:
 Imports:
     EMCluster,
     glmnet,
-    covTest
-LazyData: TRUE
+    covTest,
+    lars
 License: MIT

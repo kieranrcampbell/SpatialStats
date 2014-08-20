@@ -8,19 +8,45 @@
 ## kieran.campbell@sjc.ox.ac.uk                                    ##
 #####################################################################
 
-#' @param y Vector of response variables
+#' High dimensional significance test for LASSO using the multi-sample split method
+#' 
+#' @references  Meinshausen, Nicolai, Lukas Meier, and Peter Bühlmann.
+#' "P-values for high-dimensional regression."
+#' Journal of the American Statistical Association 104.488 (2009).
+#' 
+#' @param y Response vector
 #' @param X Design matrix
-#' @param B Number of times to partition the matrix
-#' @param s The value of lambda to use in lasso (normally use
-#' either "lambda.min" or "lambda.1se" as per glmnet package)
+#' @param B Number of times to partition the sample
+#' @param s The value of lambda to use in lasso
 #' @param include Set of predictors to be force-included in OLS analysis
-hdimLasso <- function(y,X, B=100, s=c("lambda.1se","lambda.min","halfway","usemin"),
+#' @param gamma.min
+#' @param alpha
+#' @param minP
+#' 
+#' @return A matrix of p-values
+#' 
+#' @details
+#' \itemize{
+#'  \item{\code{y} }{Text about y}
+#'  \item{\code{X} }{Text about X}
+#'  \item{\code{B} }{Text about B}
+#'  \item{\code{s} }{Lots of text about s}
+#' }
+#' 
+#' @export
+#' @author Kieran Campbell \email{kieran.campbell@@dpag.ox.ac.uk}
+#' @examples 
+#' \dontrun{
+#' pvals <- hdimLasso(y,X)
+#' 
+#' }
+lassoSig <- function(y,X, B=100, s=c("lambda.min","lambda.1se","halfway","usefixed"),
                                       gamma.min=0.05, alpha=0.05, minP=NULL, include) {
     require(glmnet)
 
     if(nrow(X) != length(y)) stop("Number of samples doesn't match")
 
-    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha, minP, include) )
+    p.mat <- replicate(B, doSingleSplit(y,X,s,alpha, minP, include=NULL) )
     mode(p.mat) <- "numeric" # weird
 
     adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
@@ -40,8 +66,6 @@ doSingleSplit <- function(y,X,s,alpha, minP, include) {
 
     predictors <- doLasso(y.in, X.in,s, minP)
 
-    ##print(paste("Using", length(predictors), "out of total", ncol(X), sep=" "))
-
     p.vals <- doLSReg(y.out, X.out, predictors, alpha, include)
     return(p.vals)
 }
@@ -54,7 +78,7 @@ doLasso <- function(y,X,s, minP = NULL) {
         s <- (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
     }
 
-    if(s == "usemin") {
+    if(s == "usefixed") {
         if(is.null(minP)) stop("Minimum predictors selected but minP is NULL")
         fit <- cv.fit$glmnet.fit
         df <- fit$df
@@ -73,7 +97,7 @@ doLasso <- function(y,X,s, minP = NULL) {
 #' p-values adjusted for multiple testing (bonferroni)
 #' keep.last: we want to force it to take the samples into account
 #' so make sure the last four predictors are always in the model
-doLSReg <- function(y, X, predictors, alpha, include=NULL) {
+doLSReg <- function(y, X, predictors, alpha, include) {
     ## magnitude of the prediction subset
     s.mag <- length(predictors) + length(include)
     nPredict <- ncol(X)
