@@ -1,0 +1,21 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{SpatialPRo vignette}
+%\VignetteKeywords{Bioinformatics, Proteomics}
+%\VignettePackage{SpatialPRo}
+
+\documentclass{article}
+
+<<style-knitr, eval=TRUE, echo=FALSE, results="asis">>=
+BiocStyle::latex()
+@
+
+\title{SpatialStats: statistics for spatial proteomics data}
+\author{Kieran Campbell\\ \texttt{kieran.campbell@dpag.ox.ac.uk}}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\section{Introduction}
+\Rpackage{SpatialStats} 
+\end{document}
