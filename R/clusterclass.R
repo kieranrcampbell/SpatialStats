@@ -3,20 +3,43 @@
 ########################################
 
 
-#' Clusters cells into different classes using
-#' Expectation Maximisation (EM) clustering
+#' Clusters cells into different classes using PCA-Gaussian Mixture model clustering
+#' 
+#' A method of using high-dimensional proteomics data to classify cellular phenotypes (e.g. 
+#' epithelial and stromal cells may be present within a tumour biopsy). First principle component
+#' analysis is performed on the raw cell-by-channel matrix \code{Y}. Then the top \code{n.pc}
+#' (default 3) principle components are used in Gaussian mixture modelling through 
+#' expectation maximisation, which clusters the cellular readouts into \code{nclass} (default 2)
+#' different classes. The underlying assumption is that in the dimensionality-reduced PC-space
+#' the cells will be phenotypically distinct enough to appear drawn from two separate 
+#' classes. 
+#' 
+#' This is an unsupervised method - other methods may be used (e.g. training a SVM
+#' on known cell phenotypes). The cell classes can always be set by alternative methods using
+#' \code{cellClass(sp) <- classes}
+#' for an \code{SPData} \code{sp} and a vector of cell classes \code{classes}.
 #'
-#' @param Y A cell by channel matrix of readouts
+#' @param Y A cell by channel matrix of readouts (e.g. from \code{cells(sp)})
 #' @param doPCA If true, first performs PCA and uses the top
-#' 3 principle components for clustering
-#' @param nclass The number of classes into which to cluster the cells
+#' principle components for clustering
+#' @param nclass The number of classes into which to cluster the cells (default = 2)
+#' @param n.pc The number of principle components to use in Gaussian mixture modelling
+#' (default = 3)
+#' 
+#' @references
+#' Chen, W.-C., Maitra, R., Melnykov, V. (2012) EMCluster: EM Algorithm for Model-Based
+#' Clustering of Finite Mixture Gaussian Distribution. R Package, URL
+#' http://cran.r-project.org/package=EMCluster
+#' 
+#' @return A vector of length number of cells with numeric values corresponding
+#' to distinct classes for each cell.
 #'
 #' @export
-clusterClass <- function(Y, doPCA = TRUE, nclass=2) {
+clusterClass <- function(Y, doPCA = TRUE, nclass=2, n.pc =3) {
     d <- NULL
     if(doPCA) {
         ypca <- princomp(Y)
-        d <- ypca$scores[,1:3]
+        d <- ypca$scores[,1:n.pc]
     } else {
         d <- Y
     }

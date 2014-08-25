@@ -33,6 +33,7 @@
 #' @param by.class Normalize each class of cells separately
 #' @param norm.size Regress out a cell size dependency
 #' @param norm.concentration Regress out the cell concentration dependency
+#' @param norm.centrescale Scale each column of \code{cells(sp)} to have mean 0 and sd 1
 #' @param norm.regenerateNN Regenerate nearest neighbour data after normalization
 #' 
 #' @return An object of class \code{SPData} that has been appropriately normalized.
@@ -67,7 +68,10 @@ normalizeSP <- function(sp, by.class = TRUE,
   sp
 }
 
-#' Centre scale a vector to mean 0 and sd 1
+# Centre scale a vector to mean 0 and sd 1
+# 
+# @param x The vector to centre-scale
+# @return The centre-scaled vector
 centreScale <- function(x) {
   (x - mean(x))/sd(x)
 }
@@ -99,7 +103,7 @@ preprocess.centre <- function(Y, by.class, cell.class=NULL) {
 #'
 #' @param Y Measurement by channel matrix
 #' @param s Vector of cell sizes
-#' @para by.class Normalize each cell class separately
+#' @param by.class Normalize each cell class separately
 #' @param cell.classes A vector of cell classes as each type is normalized separately. Should be the same length
 #' as \code{nrow(Y)}, and is most likely the output of \code{cellClass(sp)} for some \code{SPData} object \code{sp}
 lmNormalize <- function(Y, s, by.class, cell.classes=NULL) {
@@ -132,36 +136,14 @@ lmY <- function(Y, s) {
   Y
 }
 
-#' Plot the linear fit of cell measurements against an independent variable (e.g. size.)
-#' @param Y A cell-by-channel matrix of measurements
-#' @param s The independent (predictor) variable for plotting
-#' @param cell.classes The classes of each cell. Should be a vector the same size
-#' @param channel The channel to plot
-#' as \code{nrow(Y)}.
-#'
-#'
-plotLm <- function(Y, s, channel, cell.classes) {
-  y <- lapply(1:2, function(i) Y[cell.classes == i,])
-  sizes <- lapply(1:2, function(i) s[cell.classes == i])
-  
-  z1 <- y[[1]] ; z2 <- y[[2]]
-  l1 <- lm(z1[,channel] ~ sizes[[1]])
-  l2 <- lm(z2[,channel] ~ sizes[[2]])
-  
-  plot(s, Y[,channel], col=cell.classes, xlab="Cell size (px)", ylab="Log expr")
-  j1 <- order(sizes[[1]])
-  j2 <- order(sizes[[2]])
-  lines(sizes[[1]][j1], l1$fitted[j1],col="black")
-  lines(sizes[[2]][j2], l2$fitted[j2],col="red", cex=2)
-  
-}
 
 #' Uses lm normalisation to normalize by cell concentration
 #'
 #' @param Y A cell-by-channel matrix of measurements
-#' @param separate normalize each cell class separately
+#' @param by.class If true normalize each cell class separately
 #' @param cell.classes The cell classes as passed by cellClass
 #'
+#' @return Concentration normalized cell-by-channel matrix
 totalProteinNormalize <- function(Y, by.class, cell.classes=NULL) {
   nchannels <- ncol(Y)
   Y.n <- NULL
