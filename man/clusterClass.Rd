@@ -11,6 +11,8 @@ clusterClass(Y, doPCA = TRUE, nclass = 2)
 
 \item{doPCA}{If true, first performs PCA and uses the top
 3 principle components for clustering}
+
+\item{nclass}{The number of classes into which to cluster the cells}
 }
 \description{
 Clusters cells into different classes using

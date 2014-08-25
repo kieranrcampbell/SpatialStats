@@ -38,7 +38,7 @@
 #' the number of folds for cross-validation (\code{nfolds}). The package \code{glmnet}
 #' requres at least 3 samples in a cross-validation split in finding the optimal
 #' \eqn{\lambda} (\emph{not the same as a multi-sample split}). Therefore, if we start
-#' with \eqn{N} samples, \code{glmnet} receives at least \code{floor(\eqn{N/2})} which it then splits
+#' with \eqn{N} samples, \code{glmnet} receives at least \eqn{floor(N/2)} which it then splits
 #' in to \code{nfolds} for cross validation. As such we necessarily need
 #' \deqn{
 #' floor((floor(N/2))/nfolds) > 3
@@ -95,8 +95,13 @@
 #' \dontrun{
 #' set.seed(123)
 #' X <- matrix(rnorm(300),ncol=3)
+#' colnames(X) <- paste("predictor",1:3,sep="")
 #' y <- rnorm(100, X[,1] - 2*X[,3],1)
 #' pvals <- LassoSig(y, X, B=50, s="lambda.min")
+#' 
+#' ## Output:
+#' ## predictor1   predictor2   predictor3 
+#' ## 4.567217e-07 1.000000e+00 1.187136e-17 
 #' }
 #' 
 LassoSig <- function(y,X, B=100, s=c("lambda.min","lambda.1se","halfway","usefixed"),
@@ -105,7 +110,7 @@ LassoSig <- function(y,X, B=100, s=c("lambda.min","lambda.1se","halfway","usefix
   if(nrow(X) != length(y)) stop("Number of samples doesn't match")
   if(length(y) <= 6 * nfolds + 3) stop("Number of samples too small for required cross validation folds. See help('LassoSig') for more details")
   
-  p.mat <- replicate(B, doSingleSplit(y, X, s, fixedP, include, nfolds) )
+  p.mat <- replicate(B, doSingleSplit(y, X, s, fixedP, include, nfolds, intercept) )
   ##mode(p.mat) <- "numeric" # weird
   
   adjusted.pvals <- apply(p.mat, 1, adaptiveP, gamma.min)
@@ -116,7 +121,7 @@ LassoSig <- function(y,X, B=100, s=c("lambda.min","lambda.1se","halfway","usefix
 
 ## Performs a single split of the data into floor(N/2) and N - floor(N/2)
 ## groups and performs lasso & LS estimation
-doSingleSplit <- function(y, X, s, fixedP, include, nfolds) {
+doSingleSplit <- function(y, X, s, fixedP, include, nfolds, intercept) {
   n.samp <- length(y)
   sample.in <- sample(1:n.samp, size = floor(n.samp / 2))
   sample.out <- setdiff(1:n.samp, sample.in)
@@ -126,7 +131,7 @@ doSingleSplit <- function(y, X, s, fixedP, include, nfolds) {
   
   predictors <- doLasso(y.in, X.in, s, fixedP, nfolds)
   
-  p.vals <- doLSReg(y.out, X.out, predictors, include)
+  p.vals <- doLSReg(y.out, X.out, predictors, include, intercept)
   return(p.vals)
 }
 

@@ -1,7 +1,7 @@
-
 ########################################
 ## Tools for clustering by cell class ##
 ########################################
+
 
 #' Clusters cells into different classes using
 #' Expectation Maximisation (EM) clustering
@@ -9,10 +9,10 @@
 #' @param Y A cell by channel matrix of readouts
 #' @param doPCA If true, first performs PCA and uses the top
 #' 3 principle components for clustering
+#' @param nclass The number of classes into which to cluster the cells
 #'
 #' @export
 clusterClass <- function(Y, doPCA = TRUE, nclass=2) {
-    require(EMCluster)
     d <- NULL
     if(doPCA) {
         ypca <- princomp(Y)

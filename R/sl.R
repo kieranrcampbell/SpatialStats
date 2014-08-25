@@ -13,6 +13,11 @@ library(covTest)
 
 #' Cleans up results of the covariance test statistic and applies the
 #' bonferroni multiple testing correction for each response variable
+#' 
+#' @param cvtests A list of results from \code{covTest}. More than one since
+#' we fit a different model for each response variable.
+#' @param nvar The original number of predictor variables - this info isn't
+#' maintained in the result.
 AdjustCovtests <- function(cvtests, nvar) {
     sapply(cvtests, function(cv) {
         cv <- cv$results

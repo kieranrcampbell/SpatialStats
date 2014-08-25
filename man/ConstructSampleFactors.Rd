@@ -3,10 +3,23 @@
 \alias{ConstructSampleFactors}
 \title{Construct model matrix for integrating multiple samples}
 \usage{
-ConstructSampleFactors(XY, sample.ids)
+ConstructSampleFactors(XY, sample.ids, intercept = TRUE)
 }
 \arguments{
-\item{XY}{Output of BindSPE}
+\item{XY}{An \code{X-Y-sizes} list - the output of \code{BindSPE}}
+
+\item{sample.ids}{The IDs of the samples that have been bound together - for naming the factors}
+
+\item{intercept}{If true an intercept is modelled when calling the function \code{model.matrix}
+but then removed from the resulting matrix so it isn't modelled twice when \code{lm} is
+later called. If false, the call to \code{model.matrix} is performed without an intercept, and
+the resulting model.matrix contains all sample factors - this matrix will have one more column
+that if \code{intercept = FALSE}.}
+}
+\value{
+A model matrix that correctly accounts for differing
+means of samples as the result of binding them together
+using the function \code{BindSPE}.
 }
 \description{
 Given the output of the function BindSPE we would like to control

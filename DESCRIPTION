@@ -12,4 +12,4 @@ Imports:
     glmnet,
     covTest,
     lars
-License: MIT
+License: GPL-2
