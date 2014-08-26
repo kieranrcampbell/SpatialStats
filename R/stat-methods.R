@@ -110,3 +110,36 @@ ConstructSampleFactors <- function(XY, sample.ids, intercept=TRUE) {
   colnames(m) <- paste("sample", sample.ids[1:Nfactors], sep="")
   return( m )
 }
+
+#' Clean up and bonferroni adjust multiple \code{covTest} results
+#' 
+#' @param cvtests A list of results from \code{covTest}. More than one since
+#' we fit a different model for each response variable.
+#' @param nvar The original number of predictor variables - this info isn't
+#' maintained in the result.
+#' 
+#' @return An n-by-m matrix of p-values for m predictor and n response variables.
+AdjustCovtests <- function(cvtests, nvar) {
+  sapply(cvtests, function(cv) {
+    cv <- cv$results
+    pred.num <- abs(cv[,1])
+    
+    ## if a predictor appears more than once, remove it from the
+    ## table as it may be unreliable
+    ta <- table(abs(pred.num))
+    multiple <- as.numeric(names(which(ta > 1)))
+    P <- cv[,3]
+    
+    if(length(multiple) > 0) {
+      toRemove <- which(pred.num == multiple)
+      pred.num <- pred.num[-toRemove]
+      P <- P[-toRemove]
+    }
+    
+    P <- p.adjust(P, method="bonferroni")
+    retval <- rep(NA, nvar)
+    retval[pred.num] <-  P
+    retval[is.na(retval)] <- 1 # if a predictor doesn't appear at all, p-value of 1
+    retval
+  })
+}

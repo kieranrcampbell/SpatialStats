@@ -36,41 +36,90 @@
 #'
 #' @export
 clusterClass <- function(Y, doPCA = TRUE, nclass=2, n.pc =3) {
-    d <- NULL
-    if(doPCA) {
-        ypca <- princomp(Y)
-        d <- ypca$scores[,1:n.pc]
-    } else {
-        d <- Y
-    }
-
-    emobj <- simple.init(d, nclass=nclass)
-    emobj <- shortemcluster(d, emobj)
-    ret <- emcluster(d, emobj, assign.class = TRUE)
-    ret$class
+  d <- NULL
+  if(doPCA) {
+    ypca <- princomp(Y)
+    d <- ypca$scores[,1:n.pc]
+  } else {
+    d <- Y
+  }
+  
+  emobj <- simple.init(d, nclass=nclass)
+  emobj <- shortemcluster(d, emobj)
+  ret <- emcluster(d, emobj, assign.class = TRUE)
+  ret$class
 }
 
-#' Given a 2 class sample, findTumourClass returns one of the indices
-#' (1 or 2) depending on which has the higher overall keratin concentration
+#' Find the cell class with the highest/lowest average channel
 #'
-#' @param sp An SPData object
+#' Given tissue samples with different classes, it may be advantageous to single out a 
+#' class that corresponds to a certain phenotype. These are easiest found by considering
+#' the cell class with the highest or lowest average (mean/median) expression of a given tissue,
+#' e.g. in epithelial cells keratin is over-expressed while in stromal cells vimentin
+#' is under-expressed.
+#' 
+#' @details
+#' Most normalization routines normalize each class separately. However, this will make each
+#' channel \eqn{N(0,1)} within a cell class, so comparison is just noise. This method normalizes 
+#' the selected channel w.r.t. cell size and concentration, then picks out the highest or
+#' lowest average (mean/median, set by \code{method}).
+#' 
+#' \code{channel} greps the channel name to find an index containing the string, but make sure that
+#' string exists in a channel and only once, otherwise an error will be thrown.
+#' 
+#' \code{direction} If \code{"higher"} returns the class with the highest mean/median of the selected
+#' channel, while \code{"lower"} will return the class with the lowest mean/median.
 #'
+#' @param sp An \code{SPData} object
+#' @param channel A (partial) channel name 
+#' @param direction Whether to look for the highest or lowest average
+#' @param method The method for average (mean or median)
+#' 
+#' @return The class index with the higher average in the channel
+#' 
+#' @rdname findid-methods
+#' @examples
+#' \dontrun{
+#' ## Keratin is higher in epithelial cells:
+#' keratin.class <- findID(sp, "Keratin", direction="higher", method="median")
+#' }
+#' 
 #' @export
-findTumourID <- function(sp) {
-    Y <- rawData(sp)
+findID <- function(sp, channel, direction=c("higher","lower"), method=c("mean","median")) {
+  Y <- rawData(sp)
+  
+  index <- grep(channel, channels(sp))
+  if(length(index) == 0) stop(channel + " not found in channels!")
+  if(length(index) > 1) stop("More than channel found corresponding to " + channel)
+  
+  Yk <- Y[,index]
+  y.excl <- rowSums(Y[,-index])
+  
+  norm.fit <- lm(Yk ~ size(sp) + y.excl)
+  
+  Yk <- residuals(norm.fit)
+   
+  classes <- lapply(unique(cellClass(sp)), function(i) which(cellClass(sp) == i))
+  
+  class.means <- sapply(classes, function(cell.list) do.call(method, list((Yk[cell.list]))))
+  
+  classind <- NULL
+  if(direction == "higher") {
+    classind <- which.max(class.means)
+  } else if(direction == "lower")  {
+    classind <- which.min(class.means)
+  } 
+  return(unique(cellClass(sp))[classind])
+}
 
-    keratin.index <- grep("Keratin", channels(sp))
-    Yk <- Y[,keratin.index]
-
-    if(length(keratin.index) == 0) stop("Keratin not found in channels!")
-    if(length(keratin.index) > 1) stop("More than 1 keratin sample found!")
-
-    cl1 <- which(cellClass(sp) == 1)
-    cl2 <- which(cellClass(sp) == 2)
-
-    meanCl1 <- mean(Yk[cl1])
-    meanCl2 <- mean(Yk[cl2])
-
-
-    which.max(c(meanCl1, meanCl2))
+#' Apply \code{\link{findID}} across an entire \code{\link{SPExp}}
+#' 
+#' @param SPE An \code{SPExp} object
+#' 
+#' @return A vector of cell classes corresponding to each sample.
+#' 
+#' @rdname findid-methods
+#' @export
+findIDs <- function(SPE, channel, direction=c("higher","lower"), method=c("mean","median")) {
+  sapply(SPlist(SPE), findID, channel, direction, method)
 }

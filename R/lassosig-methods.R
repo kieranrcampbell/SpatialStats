@@ -88,7 +88,7 @@
 #' @return A vector of p-values, where the \eqn{i}th entry corresponds to the p-value for the predictor
 #' defined by the \eqn{i}th column of \code{X}.
 #' 
-#' 
+#' @rdname lassosig-methods
 #' @export
 #' @author Kieran Campbell \email{kieran.campbell@@dpag.ox.ac.uk}
 #' @examples 
@@ -222,5 +222,17 @@ adaptiveP <- function(P, gamma.min) {
   return( pj )
 }
 
+#' Call \code{LassoSig} for multiple response variables
+#' 
+#' @param Y Response matrix for general regression with \code{GeneralLassoSig}
+#' @return An n-by-m matrix of p-values for n predictors and m response variables
+#' @rdname lassosig-methods 
+GeneralLassoSig <- function(Y, X, B=100, s=c("lambda.min","lambda.1se","halfway","usefixed"),
+                            gamma.min=0.05, fixedP=NULL, include=NULL, 
+                            nfolds=10, intercept = TRUE) {
+  apply(Y, 2, function(y) {
+    LassoSig(y, X, B, s, gamma.min, fixedP, include, nfolds, intercept)
+  })
+}
 
 

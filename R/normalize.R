@@ -110,7 +110,7 @@ lmNormalize <- function(Y, s, by.class, cell.classes=NULL) {
   
   Y.n <- NULL
   if(!by.class) {
-    cell.classes <- rep(1, now(Y))
+    cell.classes <- rep(1, nrow(Y))
   }
   y <- lapply(unique(cell.classes), function(i) Y[cell.classes == i,])
   sizes <- lapply(unique(cell.classes), function(i) s[cell.classes == i])
