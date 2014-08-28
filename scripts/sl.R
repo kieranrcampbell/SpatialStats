@@ -4,59 +4,12 @@
 ## kieran.campbell@sjc.ox.ac.uk                                           ##
 ############################################################################
 
-require(methods)
-library(devtools)
+
 library(lars)
 library(covTest)
-load_all("../../SpatialPRo")
-load_all("..")
 
-## find tumour ids with something like
-# tid <- findHigherID(sp, "Keratin","mean")
-
-
-findOverlap <- function(a.results, remove=c("same", "different")) {
-  sr <- NULL
-  
-  if(remove == "different") {
-    sr <- lapply(a.results, function(mat) {
-      cross <- which(mat[,1] != mat[,2])
-      mat[cross,,drop=FALSE]
-    })
-  } else {
-    sr <- lapply(a.results, function(mat) {
-      cross <- which(mat[,1] == mat[,2])
-      mat[cross,,drop=FALSE]
-    })
-  }
-  
-  if(0 %in% dim(sr[[1]] || 0 %in% dim(sr[[2]]))) {
-    ## one is empty
-    return( NULL )
-  }
-  
-  intersect <- apply(sr[[1]], 1, function(row) {
-    if(is.matrix(sr[[2]])) {
-      r.logic <- apply(sr[[2]], 1, function(r) {
-        l <- r == row
-        l[1] & l[2]
-      })
-      any(r.logic)
-    } else {
-      l <- sr[[2]] == row
-      l[1] & l[2]
-    }
-    
-  })
-  
-  pathways <- sr[[1]][intersect,]
-  if(!is.matrix(pathways)) {
-    pathways <- channels(SPE[[1]])[pathways]
-  } else {
-    pathways <- t(apply(pathways, 1, function(pw) channels(SPE[[1]])[pw]))
-  }
-  pathways
-}
+library(SpatialPRo)
+library(SpatialStats)
 
 
 # Main analysis begins here -----------------------------------------------

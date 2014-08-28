@@ -18,7 +18,7 @@ BiocStyle::latex()
 \tableofcontents
 \section{Introduction}
 
-\subsection{Signalling Model}
+\subsection{Signalling model}
 This vignette introduces the workflow for elucidating spatial signalling pathways from spatially resolved proteomics data. The proposed model is of the form
 
 
@@ -27,6 +27,13 @@ y_i^{(p)} = \mu_p + \sum_{j \in NN(i)} w_{j|i} \sum_{q \in P} \beta_{qp} x_j^{(q
 \end{equation}
 
 where $y_i^{(p)}$ is the concentration of protein $p$ in cell $i$, $NN(i)$ are the nearest neighbour cells of $i$, $w_{j|i}$ is the relative boundary size of cell $j$ to cell $i$ (that is, the proportion of cell $i$'s boundary made up of cell $j$)\footnote{Note that in general $w_{j|i} \neq w_{i|j}$}, $P$ is the set of all proteins considered, $\beta_{qp}$ is the effect of nearest neighbour protein $q$ on protein $p$ in the central cell, and $x_j^{(q)}$ is the concentration of protein $q$ in cell $j$. The eventual quantities of real interest are the $\{\beta\}$, which give a measure of one protein's effect on the other in nearby cells and would eventually elucidate inter-cellular signalling pathways. The simple average can also be used, rather than the average weighted by the relative boundary size. The effect of this is that $w_{j|i} = \frac{1}{N_i}$ if cell $i$ has $N_i$ neighbours.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[width=0.55\textwidth]{xy_diag}
+      \caption{Schematic diagram of the model.}
+      \label{fig:multiple}
+\end{figure}
 
 \subsection{LASSO regression}
 Rather than ordinary least squares regression, \Rpackage{SpatialStats} uses LASSO regression - a form of regularization where the magnitude of each coefficient is penalised. This is motivated on three fronts: (1) it avoids overfitting given the large number of predictor variables, (2) it scales well to $p > n$ probelems of a subset of cells is selected, and (3) it fits well with the assumption that the underlying interaction matrix is sparse, since we don't expect many channels to spatially interact with the others.
@@ -39,10 +46,135 @@ In LASSO regression the objective function becomes
 where the penalisation parameter $\lambda$ is introduced, which controls the penalty the $L^1$ norm of the coefficients has on the minimisation. Several packages are available in R to do LASSO regression. Here we use two - \Rpackage{glmnet} and \Rpackage{lars} - depending on the type of significance testing used (see below).
 
 
-\subsubsection{Significance testing}
+\subsection{Significance testing in LASSO}
+Two significance testing methods in LASSO are used: the multisample splitting method \cite{meinshausen2009p}, and the recent covariance test statistic \cite{lockhart2014significance}. Due to the considerable assumptions underlying our model and noise in the dataset, the final interactions we deem significant are the consensus set - those reported as significant through both methods.
 
-\subsubsection{Multiple testing correction}
+\subsubsection{Multi-sample split method}
+The multisample splitting method is an extension of an earlier method in which the dataset is randomly split into two halves, with feature selection performed on one half and the classical OLS significance testing on the other half using the selected features. The multisample splitting technique extends this so that rather than only splitting the data once the data is randomly split in two multiple times, avoiding results that could be biased due to the arbitrary split of the data. 
+
+The main issue that arises from this is how to calculate a single $p$-value given the multiple splits. First, the Bonferroni correction is applied to each split, so if $s$ features are selected in split $b$ for variable $i$ then the $p$-value $P_i$ is corrected to $P^{(b)}_{corr,i} = s\cdot P^{(b)}_i$. Note that if variable $i$ is not selected as a feature in split $b$ then the corresponding $p$-value is simply set to 1. Then if the function
+\begin{equation}
+Q_i(\gamma) = \min\left( \mathrm{empirical } \;\gamma\mathrm{-quantile}\left\{ P^{(b)}_{corr,i}; \; \; b = 1,\ldots,B \right\}, 1 \right) 
+\end{equation}
+is defined it can be shown that the corrected $p$-value for variable $i$ is given by 
+\begin{equation}
+P_j = \min \left( (1-log(\gamma_{min})) \inf_{\gamma \in (\gamma_{min},1)} Q_j(\gamma), 1 \right).
+\end{equation}
+
+\subsubsection{Covariance test statistic}
+The covariance test statistic is a very recent advance in significance testing in the context of LASSO and perhaps the most similar to a traditional statistic. As the penalisation parameter $\lambda$ is decreased, more and more coefficients are re-introduced. The covariance test statistic $T_k$ relies on the difference to the residual sum of squares depending on whether or not a given predictor is included in the model. The authors went on to show that this statistic is asymptotically exponential, meaning a $p$-value can be found. While a fully mathematical treatment can be found in the original paper \cite{lockhart2014significance}, here we use the \texttt{R} package \texttt{covTest} provided by the authors.
+
+
+
+\subsection{Multiple testing corrections}
+If we have $p$ channels then the resulting interaction matrix has $p^2$ entries - in other words we perform $p^2$ significance tests, which carries a serious risk of calling something significant when it's not. As a result stringent multiple comparison corrections are required. For a given response variable we Bonferroni correct the $p$-values for the predictors, then for a given predictor we Holm-Bonferroni correct for the response variables (see figure \ref{fig:multiple}).
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[width=0.55\textwidth]{multiple_testing}
+      \caption{Schematic diagram of multiple testing corrections used.}
+      \label{fig:multiple}
+\end{figure}
+
 
 \section{Workflow}
+By default the \Rclass{SPExp} object \Rcode{SPE} is included in the \Rpackage{SpatialPRo} and loaded by default. We can renormalize using all the default settings:
+<<wf1, message=FALSE>>=
+library(lars)
+library(covTest)
 
+library(SpatialPRo)
+library(SpatialStats)
+
+set.seed(123)
+
+SPE@spdata <- lapply(SPlist(SPE), normalizeSP)
+@
+
+Since there were very few immune cells in the analysis, it is helpful to remove the immune marks (CD*) before continuing:
+<<wf2>>=
+spe.list <- list()
+immune.ind <- c(5,7,8,10,19,28)
+for(i in 1:length(SPE)) spe.list[[i]] <-  SPE[[i]][,-immune.ind]
+
+spe.noimmune <- SPExperiment(getDir(SPE), files(SPE), spe.list)
+@
+
+We then wish to find the tumour cell class in each sample. This is done by finding the class with the lower median vimentin:
+<<wf3>>=
+tumour.classes <- findIDs(spe.noimmune, "Vimentin", "lower", "median") 
+@
+
+We then bind all the data together using \Rcode{BindSPE} and carefulyl construct sample-dependent factors using \Rcode{ConstructSampleFactors}:
+
+<<wf4>>=
+XY <- BindSPE(spe.noimmune, choose.class = tumour.classes)
+X <- XY$X
+Y <- XY$Y
+
+factors <- ConstructSampleFactors(XY, IDs(SPE))
+X <- cbind(X, factors)
+
+@
+
+If we wanted to randomise the cells to to a sanity check on the analysis, we would call
+<<sanity, eval=FALSE>>=
+X <- X[sample(nrow(X)),]
+@
+
+We then perform the regression methods. By default \Rcode{weighted=FALSE}, so we do not weight the regression by relative boundary size. The multi-sample split method is performed using \Rcode{GeneralLassoSig}:
+
+<<gls, eval=TRUE>>=
+npred <- ncol(X)
+include <- npred:(npred - ncol(factors) + 1)
+
+## multisample split results
+multisplit.res <- GeneralLassoSig(Y,X,B=100, s="usefixed",fixedP = 5, include=include)
+@
+
+And the covariance test statistic results using the \Rcode{covTest} function:
+
+<<covtest, eval=TRUE>>=
+lar <- apply(Y, 2, function(y) lars(X, y, "lasso", normalize=FALSE))
+cvtests <- lapply(1:length(lar), function(i) covTest(lar[[i]], X, Y[,i]))
+@
+
+The \Rcode{AdjustCovtests} function takes \Rcode{cvtests} and turns it into a $p$ by $p$ matrix of $p$-values where entry $(i,j)$ corresponds to the $p$-value evidence for interaction $i$ to $j$.
+<<adj, eval=TRUE>>=
+cv.results <- AdjustCovtests(cvtests, ncol(X))
+@
+
+It is the necessary to perform the row-wise Holm-Bonferroni multiple
+
+<<mtc, eval=TRUE>>=
+alpha <- 0.05
+
+cv.results <- apply(cv.results, 1, p.adjust, method="holm")
+cv.results <- t(cv.results)
+
+multisplit.res <- apply(multisplit.res, 1, p.adjust, method="holm")
+multisplit.res <- t(multisplit.res)
+@
+
+Finally we can perform significance testing at level $\alpha$:
+<<sig,eval=TRUE>>=
+covtest.res <- which(cv.results < alpha, arr.ind=TRUE)
+multi.res <- which(multisplit.res < alpha, arr.ind=TRUE)
+rownames(multi.res) <- NULL
+
+all.res <- list(covtest.res, multi.res)
+@
+
+The \Rcode{findOverlap} function is used to find overlapping pathways using the multisample-split and covariance test statistic methods. We perform this for pathways of the same componenet (i.e. $i \rightarrow i$) and between different ones (i.e. $i \rightarrow j \neq i$).
+<<pathways, eval=TRUE>>=
+pathways.diff <- findOverlap(all.res, remove="different")
+
+pathways.same <- findOverlap(all.res, remove="same")
+
+pathways.diff
+pathways.same
+@
+
+\bibliographystyle{plain}
+\bibliography{references}
 \end{document}

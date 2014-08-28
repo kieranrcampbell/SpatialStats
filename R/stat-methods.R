@@ -118,6 +118,8 @@ ConstructSampleFactors <- function(XY, sample.ids, intercept=TRUE) {
 #' @param nvar The original number of predictor variables - this info isn't
 #' maintained in the result.
 #' 
+#' @export
+#' 
 #' @return An n-by-m matrix of p-values for m predictor and n response variables.
 AdjustCovtests <- function(cvtests, nvar) {
   adjusted <- sapply(cvtests, function(cv) {
@@ -144,4 +146,64 @@ AdjustCovtests <- function(cvtests, nvar) {
     retval
   })
   return( adjusted )
+}
+
+#' Given a list of two pathway results, find the overlap between them
+#' 
+#' The result of the spatial pathway identification is a two-column matrix, where each row represents the numeric
+#' identifiers of the causal direction of the pathway, so
+#' 1 4
+#' 3 2
+#' would indicate there is a pathway from component 1 to 4, and from 3 to 2. If we use multiple methods to find these,
+#' it is useful to find the overlap - pathways reported from both methods. This method does that, effectively taking the
+#' intersection of the two matrices and returning the results in a similar matrix.
+#' 
+#' @param results A list containg two 'pathway' matrices
+#' @param remove Which results to keep: if \code{"same"} then 1 1 would be reported but 1 2 discarded, but if
+#' \code{"different"} then 1 2 would be reported but 1 1 discarded (useful for finding pathways that don't 
+#' go from same component to same component)
+#' 
+#' @return A matrix showing common pathways.
+#' @export
+findOverlap <- function(results, remove=c("same", "different")) {
+  sr <- NULL
+  
+  if(remove == "different") {
+    sr <- lapply(results, function(mat) {
+      cross <- which(mat[,1] != mat[,2])
+      mat[cross,,drop=FALSE]
+    })
+  } else {
+    sr <- lapply(results, function(mat) {
+      cross <- which(mat[,1] == mat[,2])
+      mat[cross,,drop=FALSE]
+    })
+  }
+  
+  if(0 %in% dim(sr[[1]] || 0 %in% dim(sr[[2]]))) {
+    ## one is empty
+    return( NULL )
+  }
+  
+  intersect <- apply(sr[[1]], 1, function(row) {
+    if(is.matrix(sr[[2]])) {
+      r.logic <- apply(sr[[2]], 1, function(r) {
+        l <- r == row
+        l[1] & l[2]
+      })
+      any(r.logic)
+    } else {
+      l <- sr[[2]] == row
+      l[1] & l[2]
+    }
+    
+  })
+  
+  pathways <- sr[[1]][intersect,]
+  if(!is.matrix(pathways)) {
+    pathways <- channels(SPE[[1]])[pathways]
+  } else {
+    pathways <- t(apply(pathways, 1, function(pw) channels(SPE[[1]])[pw]))
+  }
+  pathways
 }
