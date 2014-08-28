@@ -6,5 +6,5 @@ Using devtools call `install_github("kieranrcampbell/SpatialStats")`
 
 ### Usage
 
-TBC
+See the vignette (vignnete/SpatialStats.pdf)
 
