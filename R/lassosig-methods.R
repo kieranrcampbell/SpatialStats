@@ -138,7 +138,7 @@ doSingleSplit <- function(y, X, s, fixedP, include, nfolds, intercept) {
 ## Performs lasso on y & X, with custom option of s to be midway point between lambdamin
 ## and lambda within 1se
 doLasso <- function(y,X,s, fixedP = NULL, nfolds) {
-  
+  require(glmnet)
   cv.fit <- cv.glmnet(X,y, standardize=FALSE)
   if(s == "halfway") {
     s <- (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
@@ -188,7 +188,7 @@ doLSReg <- function(y, X, predictors, include, intercept) {
   pvals <- pvals * s.mag
   pvals <- sapply(pvals, min, 1) # scale > 1 to 1
   
-  pVec[predictors] <- pvals
+  pVec[full.pred] <- pvals
   names(pVec) <- colnames(X)
   return(pVec)
 }
@@ -230,8 +230,8 @@ adaptiveP <- function(P, gamma.min) {
 GeneralLassoSig <- function(Y, X, B=100, s=c("lambda.min","lambda.1se","halfway","usefixed"),
                             gamma.min=0.05, fixedP=NULL, include=NULL, 
                             nfolds=10, intercept = TRUE) {
-  apply(Y, 2, function(y) {
-    LassoSig(y, X, B, s, gamma.min, fixedP, include, nfolds, intercept)
+  apply(Y, 2, function(ycol) {
+    LassoSig(ycol, X, B, s, gamma.min, fixedP, include, nfolds, intercept)
   })
 }
 

@@ -86,7 +86,7 @@ preprocess.centre <- function(Y, by.class, cell.class=NULL) {
   } else { # normalise each cell class separately
     if(is.null(cell.class)) stop("by.class==TRUE and cell.class==NULL")
     
-    class.indices <- lapply(unique(cell.class), function(cl) which(cell.class == cl))
+    cell.indices <- lapply(unique(cell.class), function(cl) which(cell.class == cl))
     Y <- apply(Y, 2, function(y) {
       for(i in 1:length(cell.indices)) {
         y[ cell.indices[[i]] ] <- centreScale(y[ cell.indices[[i]] ])
@@ -155,7 +155,7 @@ totalProteinNormalize <- function(Y, by.class, cell.classes=NULL) {
       y - fit$fitted
     })
   } else {
-    y <- lapply(unique(cell.classes), function(i) Y[cell.classes == i,])
+    y <- lapply(sort(unique(cell.classes)), function(i) Y[cell.classes == i,])
     y.concnorm <- lapply(y, function(yc) {
       new.yc <- sapply(1:nchannels, function(i) {
         V <- yc[,i]
@@ -166,7 +166,7 @@ totalProteinNormalize <- function(Y, by.class, cell.classes=NULL) {
       new.yc
     })
     Y.n <- matrix(NA, nrow=nrow(Y), ncol=ncol(Y))
-    for(i in 1:unique(cell.classes)) {
+    for(i in sort(unique(cell.classes))) {
       Y.n[cell.classes == i, ]  <- y.concnorm[[i]]
     }
     
