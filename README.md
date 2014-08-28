@@ -6,5 +6,5 @@ Using devtools call `install_github("kieranrcampbell/SpatialStats")`
 
 ### Usage
 
-See the vignette (vignnete/SpatialStats.pdf)
+See the vignette (vignettes/SpatialStats.pdf)
 
