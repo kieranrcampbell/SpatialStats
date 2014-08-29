@@ -35,7 +35,7 @@
 #' to distinct classes for each cell.
 #'
 #' @export
-clusterClass <- function(Y, doPCA = TRUE, nclass=2, n.pc =3) {
+ClusterClass <- function(Y, doPCA = TRUE, nclass=2, n.pc =3) {
   d <- NULL
   if(doPCA) {
     ypca <- princomp(Y)
@@ -81,11 +81,11 @@ clusterClass <- function(Y, doPCA = TRUE, nclass=2, n.pc =3) {
 #' @examples
 #' \dontrun{
 #' ## Keratin is higher in epithelial cells:
-#' keratin.class <- findID(sp, "Keratin", direction="higher", method="median")
+#' keratin.class <- FindID(sp, "Keratin", direction="higher", method="median")
 #' }
 #' 
 #' @export
-findID <- function(sp, channel, direction=c("higher","lower"), method=c("mean","median")) {
+FindID <- function(sp, channel, direction=c("higher","lower"), method=c("mean","median")) {
   Y <- rawData(sp)
   
   index <- grep(channel, channels(sp))
@@ -112,7 +112,7 @@ findID <- function(sp, channel, direction=c("higher","lower"), method=c("mean","
   return(unique(cellClass(sp))[classind])
 }
 
-#' Apply \code{\link{findID}} across an entire \code{\link{SPExp}}
+#' Apply \code{\link{FindID}} across an entire \code{SPExp}
 #' 
 #' @param SPE An \code{SPExp} object
 #' 
@@ -120,6 +120,6 @@ findID <- function(sp, channel, direction=c("higher","lower"), method=c("mean","
 #' 
 #' @rdname findid-methods
 #' @export
-findIDs <- function(SPE, channel, direction=c("higher","lower"), method=c("mean","median")) {
-  sapply(SPlist(SPE), findID, channel, direction, method)
+FindIDs <- function(SPE, channel, direction=c("higher","lower"), method=c("mean","median")) {
+  sapply(SPlist(SPE), FindID, channel, direction, method)
 }

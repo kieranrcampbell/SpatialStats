@@ -88,7 +88,7 @@ library(SpatialStats)
 
 set.seed(123)
 
-SPE@spdata <- lapply(SPlist(SPE), normalizeSP)
+SPE@spdata <- lapply(SPlist(SPE), NormalizeSP)
 @
 
 Since there were very few immune cells in the analysis, it is helpful to remove the immune marks (CD*) before continuing:
@@ -102,7 +102,7 @@ spe.noimmune <- SPExperiment(getDir(SPE), files(SPE), spe.list)
 
 We then wish to find the tumour cell class in each sample. This is done by finding the class with the lower median vimentin:
 <<wf3>>=
-tumour.classes <- findIDs(spe.noimmune, "Vimentin", "lower", "median") 
+tumour.classes <- FindIDs(spe.noimmune, "Vimentin", "lower", "median") 
 @
 
 We then bind all the data together using \Rcode{BindSPE} and carefulyl construct sample-dependent factors using \Rcode{ConstructSampleFactors}:
@@ -165,14 +165,18 @@ rownames(multi.res) <- NULL
 all.res <- list(covtest.res, multi.res)
 @
 
-The \Rcode{findOverlap} function is used to find overlapping pathways using the multisample-split and covariance test statistic methods. We perform this for pathways of the same componenet (i.e. $i \rightarrow i$) and between different ones (i.e. $i \rightarrow j \neq i$).
+The \Rcode{FindOverlap} function is used to find overlapping pathways using the multisample-split and covariance test statistic methods. We perform this for pathways of the same componenet (i.e. $i \rightarrow i$) and between different ones (i.e. $i \rightarrow j \neq i$).
 <<pathways, eval=TRUE>>=
-pathways.diff <- findOverlap(all.res, remove="different")
+pathways.diff <- FindOverlap(all.res, remove="different")
 
-pathways.same <- findOverlap(all.res, remove="same")
+pathways.same <- FindOverlap(all.res, remove="same")
+
+getChannelName <- function(inds) channels(SPE[[1]])[inds]
+pathways.diff <- apply(pathways.diff, 1, getChannelName)
+pathways.same <- apply(pathways.same, 1, getChannelName)
 
 pathways.diff
-pathways.same
+t(pathways.same)
 @
 
 \bibliographystyle{plain}

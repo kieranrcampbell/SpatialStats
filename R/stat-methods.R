@@ -96,7 +96,7 @@ ConstructSampleFactors <- function(XY, sample.ids, intercept=TRUE) {
   #     tcol[ range ] <- 1
   #     factors <- cbind(factors, tcol)
   #   }
-  sample.factors <- sapply(1:length(cell.sizes), function(i) rep(i, cell.sizes[i]))
+  sample.factors <- sapply(1:length(cell.sizes), function(i) rep(sample.ids[i], cell.sizes[i]))
   sample.factors <- as.factor(unlist(sample.factors))
   
   m <- NULL
@@ -107,7 +107,10 @@ ConstructSampleFactors <- function(XY, sample.ids, intercept=TRUE) {
     m <- model.matrix( ~ 0 + sample.factors)
   }  
   samples.used <- setdiff(1:length(cell.sizes), intercept*1)
-  colnames(m) <- paste("sample", sample.ids[1:Nfactors], sep="")
+  
+  ids.used <- strsplit(colnames(m), "factors")
+  ids.used <- sapply(ids.used, function(x) x[2])
+  colnames(m) <- ids.used
   return( m )
 }
 
@@ -165,7 +168,7 @@ AdjustCovtests <- function(cvtests, nvar) {
 #' 
 #' @return A matrix showing common pathways.
 #' @export
-findOverlap <- function(results, remove=c("same", "different")) {
+FindOverlap <- function(results, remove=c("same", "different")) {
   sr <- NULL
   
   if(remove == "different") {
@@ -200,10 +203,10 @@ findOverlap <- function(results, remove=c("same", "different")) {
   })
   
   pathways <- sr[[1]][intersect,]
-  if(!is.matrix(pathways)) {
-    pathways <- channels(SPE[[1]])[pathways]
-  } else {
-    pathways <- t(apply(pathways, 1, function(pw) channels(SPE[[1]])[pw]))
-  }
+#   if(!is.matrix(pathways)) {
+#     pathways <- channels(SPE[[1]])[pathways]
+#   } else {
+#     pathways <- t(apply(pathways, 1, function(pw) channels(SPE[[1]])[pw]))
+#   }
   pathways
 }

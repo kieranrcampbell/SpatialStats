@@ -138,7 +138,6 @@ doSingleSplit <- function(y, X, s, fixedP, include, nfolds, intercept) {
 ## Performs lasso on y & X, with custom option of s to be midway point between lambdamin
 ## and lambda within 1se
 doLasso <- function(y,X,s, fixedP = NULL, nfolds) {
-  require(glmnet)
   cv.fit <- cv.glmnet(X,y, standardize=FALSE)
   if(s == "halfway") {
     s <- (cv.fit$lambda.min + cv.fit$lambda.1se) / 2
@@ -225,10 +224,28 @@ adaptiveP <- function(P, gamma.min) {
 #' Call \code{LassoSig} for multiple response variables
 #' 
 #' @param Y Response matrix for general regression with \code{GeneralLassoSig}
+#' @param X Design matrix
+#' @param B Number of times to partition the sample
+#' @param s The value of lambda to use in lasso. Can be:
+#' \itemize{
+#' \item{An actual value of lambda you have determined}
+#' \item{\code{lambda.min} The lambda that minimises the mean squared error from n-fold cross-validation (recommended)}
+#' \item{\code{lambda.1se} The lambda that accounts for the smallest number of parameters and is within 1 standard error from \code{lambda.min}}
+#' \item{\code{halfway} The lambda that is halfway between \code{lambda.min} and \code{lambda.1se}}
+#' \item{\code{usefixed} Use the smallest lambda that accounts for a given number of parameters (set by \code{fixedP})}
+#' }
+#' @param include Set of predictors to be force-included in OLS analysis
+#' @param gamma.min Lower bound for gamma in the adaptive search for the best p-value (default 0.05)
+#' @param fixedP The fixed number of parameters to use (if \code{s == "usefixed"})
+#' @param nfolds Number of folds of cross-validation in the glmnet n-fold crossvalidation
+#' @param intercept Whether to include an intercept in the OLS regression (default = \code{TRUE})
+#' 
+#' @seealso LassoSig
+#' 
 #' @return An n-by-m matrix of p-values for n predictors and m response variables
 #' 
 #' @export
-#' @rdname lassosig-methods 
+#' @rdname general-lassosig-methods 
 GeneralLassoSig <- function(Y, X, B=100, s=c("lambda.min","lambda.1se","halfway","usefixed"),
                             gamma.min=0.05, fixedP=NULL, include=NULL, 
                             nfolds=10, intercept = TRUE) {

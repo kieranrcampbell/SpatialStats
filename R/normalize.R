@@ -39,7 +39,7 @@
 #' @return An object of class \code{SPData} that has been appropriately normalized.
 #'
 #' @export
-normalizeSP <- function(sp, by.class = TRUE, 
+NormalizeSP <- function(sp, by.class = TRUE, 
                         norm.size = TRUE,
                         norm.concentration = TRUE,
                         norm.centrescale = TRUE,
@@ -52,7 +52,7 @@ normalizeSP <- function(sp, by.class = TRUE,
     Y <- raw
   }
   
-  if(norm.concentration) Y <- totalProteinNormalize(Y, by.class, cell.classes=cellClass(sp))
+  if(norm.concentration) Y <- TotalProteinNormalize(Y, by.class, cell.classes=cellClass(sp))
   if(norm.centrescale)  Y <- preprocess.centre(Y, by.class, cellClass(sp))
   
   if(norm.regenerateNN) {
@@ -144,7 +144,7 @@ lmY <- function(Y, s) {
 #' @param cell.classes The cell classes as passed by cellClass
 #'
 #' @return Concentration normalized cell-by-channel matrix
-totalProteinNormalize <- function(Y, by.class, cell.classes=NULL) {
+TotalProteinNormalize <- function(Y, by.class, cell.classes=NULL) {
   nchannels <- ncol(Y)
   Y.n <- NULL
   if(!by.class) {
